@@ -151,10 +151,19 @@ export async function parseMultipartForm(
       const flatFields: Record<string, string> = {}
       Object.keys(fields).forEach((key) => {
         const value = fields[key]
-        flatFields[key] = Array.isArray(value) ? value[0] : value
+        flatFields[key] = Array.isArray(value) ? value[0] : (value || '')
       })
 
-      resolve({ fields: flatFields, files })
+      // Convert files to proper type
+      const flatFiles: Record<string, FormidableFile | FormidableFile[]> = {}
+      Object.keys(files).forEach((key) => {
+        const file = files[key]
+        if (file) {
+          flatFiles[key] = file
+        }
+      })
+
+      resolve({ fields: flatFields, files: flatFiles })
     })
   })
 }

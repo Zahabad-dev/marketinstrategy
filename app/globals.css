@@ -2,10 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* FullCalendar styles */
-@import '@fullcalendar/core/main.css';
-@import '@fullcalendar/daygrid/main.css';
-
 :root {
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 214, 219, 220;
@@ -32,10 +28,7 @@ body {
 
 @layer base {
   * {
-    @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground;
+    border-color: theme('colors.gray.200');
   }
 }
 

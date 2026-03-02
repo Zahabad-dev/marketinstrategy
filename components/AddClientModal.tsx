@@ -160,7 +160,7 @@ export function AddClientModal({ isOpen, onClose, onSuccess }: AddClientModalPro
           <Button
             type="button"
             onClick={handleClose}
-            variant="outline"
+            variant="secondary"
             className="flex-1"
           >
             Cancelar

@@ -9,14 +9,6 @@ const nextConfig = {
     NEXT_PUBLIC_APP_VERSION: '2.0.0',
   },
 
-  // API routes configuration
-  api: {
-    bodyParser: {
-      sizeLimit: '10mb',
-    },
-    responseLimit: '10mb',
-  },
-
   // Image optimization
   images: {
     domains: ['localhost'],
