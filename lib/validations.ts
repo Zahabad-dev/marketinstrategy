@@ -62,7 +62,7 @@ export const createContentSchema = z.object({
   titulo: z.string().min(1, 'El título es requerido'),
   descripcion: z.string().optional(),
   tipo: z.nativeEnum(ContentType),
-  urlReferencia: z.string().url('URL inválida').optional().or(z.literal('')),
+  urlReferencia: z.string().optional().or(z.literal('')),
   archivoLocal: z.string().optional(),
   estado: z.nativeEnum(ContentStatus).optional(),
 })
@@ -72,7 +72,7 @@ export const updateContentSchema = z.object({
   titulo: z.string().min(1).optional(),
   descripcion: z.string().optional(),
   tipo: z.nativeEnum(ContentType).optional(),
-  urlReferencia: z.string().url('URL inválida').optional().or(z.literal('')).nullable(),
+  urlReferencia: z.string().optional().or(z.literal('')).nullable(),
   archivoLocal: z.string().optional().nullable(),
   estado: z.nativeEnum(ContentStatus).optional(),
 })
