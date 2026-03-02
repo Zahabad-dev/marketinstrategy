@@ -1,11 +1,12 @@
-﻿'use client'
+'use client'
 
-import { useEffect, useState } from 'react'
-import { Calendar, FileText, Image, FileVideo, Link2, ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react'
+import { useEffect, useState, useMemo } from 'react'
+import { Calendar, FileText, Image, FileVideo, Link2, ChevronLeft, ChevronRight, ExternalLink, X } from 'lucide-react'
 import AppLayout from '@/components/AppLayout'
 import { useAuth } from '@/contexts/AuthContext'
 
 const MONTH_NAMES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
+const DAY_NAMES = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb']
 const STATUS_COLORS: Record<string, string> = {
   PENDIENTE: 'bg-gray-100 text-gray-700',
   EN_REVISION: 'bg-yellow-100 text-yellow-800',
@@ -23,54 +24,79 @@ const TIPO_ICONS: Record<string, any> = {
 const TIPO_LABELS: Record<string, string> = {
   IMAGEN: 'Imagen', VIDEO_FILE: 'Video', VIDEO_LINK: 'Video (enlace)', PDF: 'PDF',
 }
+const CAMPAIGN_COLORS = ['bg-blue-400','bg-purple-400','bg-green-400','bg-orange-400','bg-pink-400','bg-teal-400','bg-red-400','bg-indigo-400']
 
 export default function PortalPage() {
   const { getToken } = useAuth()
   const [campaigns, setCampaigns] = useState<any[]>([])
-  const [contents, setContents] = useState<any[]>([])
+  const [allContents, setAllContents] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [selectedCampaign, setSelectedCampaign] = useState<any>(null)
   const [currentDate, setCurrentDate] = useState(new Date())
+  const [selectedDay, setSelectedDay] = useState<number | null>(null)
+  const [filterCampaign, setFilterCampaign] = useState<string | null>(null)
 
   const year = currentDate.getFullYear()
   const month = currentDate.getMonth()
 
-  useEffect(() => { fetchCampaigns() }, [])
-  useEffect(() => { if (selectedCampaign) fetchContents(selectedCampaign.id) }, [selectedCampaign])
+  useEffect(() => { fetchAll() }, [])
 
-  const fetchCampaigns = async () => {
+  const fetchAll = async () => {
     setLoading(true)
     const token = getToken()
     try {
       const res = await fetch('/api/campaigns', { headers: { Authorization: `Bearer ${token}` } })
       const cams = (await res.json()).data?.data || []
       setCampaigns(cams)
-      if (cams.length > 0) setSelectedCampaign(cams[0])
+      const contentArrays = await Promise.all(
+        cams.map((c: any) =>
+          fetch(`/api/contents?campanaId=${c.id}`, { headers: { Authorization: `Bearer ${token}` } })
+            .then(r => r.json()).then(d => (d.data?.data || []).map((item: any) => ({ ...item, _campanaId: c.id })))
+            .catch(() => [])
+        )
+      )
+      setAllContents(contentArrays.flat())
     } catch {} finally { setLoading(false) }
   }
 
-  const fetchContents = async (campanaId: string) => {
-    const token = getToken()
-    try {
-      const res = await fetch(`/api/contents?campanaId=${campanaId}`, { headers: { Authorization: `Bearer ${token}` } })
-      setContents((await res.json()).data?.data || [])
-    } catch {}
-  }
+  const prevMonth = () => setCurrentDate(d => new Date(d.getFullYear(), d.getMonth() - 1, 1))
+  const nextMonth = () => setCurrentDate(d => new Date(d.getFullYear(), d.getMonth() + 1, 1))
 
-  const campaignContents = contents
+  // Build calendar grid
+  const firstDay = new Date(year, month, 1).getDay()
+  const daysInMonth = new Date(year, month + 1, 0).getDate()
+  const totalCells = Math.ceil((firstDay + daysInMonth) / 7) * 7
 
-  const monthContents = contents.filter(c => {
-    if (!c.fecha) return false
-    const d = new Date(c.fecha)
-    return d.getFullYear() === year && d.getMonth() === month
-  })
+  const campaignColorMap = useMemo(() => {
+    const map: Record<string, string> = {}
+    campaigns.forEach((c, i) => { map[c.id] = CAMPAIGN_COLORS[i % CAMPAIGN_COLORS.length] })
+    return map
+  }, [campaigns])
+
+  const filteredContents = filterCampaign
+    ? allContents.filter(c => (c.campana_id || c.campanaId || c._campanaId) === filterCampaign)
+    : allContents
+
+  const contentsByDay = useMemo(() => {
+    const map: Record<number, any[]> = {}
+    filteredContents.forEach(c => {
+      if (!c.fecha) return
+      const d = new Date(c.fecha)
+      if (d.getFullYear() !== year || d.getMonth() !== month) return
+      const day = d.getDate()
+      if (!map[day]) map[day] = []
+      map[day].push(c)
+    })
+    return map
+  }, [filteredContents, year, month])
+
+  const selectedDayContents = selectedDay ? (contentsByDay[selectedDay] || []) : []
 
   return (
     <AppLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Mi Portal</h1>
-          <p className="text-gray-600 mt-1">Revisa el contenido de tus campañas</p>
+          <h1 className="text-2xl font-bold text-gray-900">Mi Calendario de Contenido</h1>
+          <p className="text-gray-600 mt-1">Revisa el plan de contenido del mes</p>
         </div>
 
         {loading ? (
@@ -82,93 +108,151 @@ export default function PortalPage() {
             <p className="text-gray-400 mt-2">Contacta a tu equipo de marketing para más información</p>
           </div>
         ) : (
-          <div className="flex gap-6 flex-col lg:flex-row">
-            {/* Campaigns sidebar */}
-            <div className="lg:w-72 space-y-3">
-              <h2 className="font-semibold text-gray-700 text-sm uppercase tracking-wide px-1">Mis Campañas</h2>
-              {campaigns.map((c: any) => {
-                const campaignConts = contents.filter(co => (co.campana_id || co.campanaId) === c.id)
-                const approved = campaignConts.filter(co => co.estado === 'APROBADO' || co.estado === 'PUBLICADO').length
-                return (
-                  <button key={c.id} onClick={() => setSelectedCampaign(c)}
-                    className={`w-full text-left rounded-xl p-4 border-2 transition-all ${selectedCampaign?.id === c.id ? 'border-primary-400 bg-primary-50' : 'border-gray-200 bg-white hover:border-gray-300'}`}>
-                    <p className="font-medium text-gray-900 text-sm">{MONTH_NAMES[(c.mes||1)-1]} {c.anio || c.año}</p>
-                    <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{c.objetivo_general || c.objetivoGeneral}</p>
-                    <div className="flex items-center gap-2 mt-2">
-                      <span className={`px-2 py-0.5 text-xs rounded-full font-medium ${
-                        c.estado === 'EN_PROGRESO' ? 'bg-green-100 text-green-700' :
-                        c.estado === 'PLANIFICADA' ? 'bg-blue-100 text-blue-700' :
-                        'bg-gray-100 text-gray-600'
-                      }`}>{c.estado === 'EN_PROGRESO' ? 'En Progreso' : c.estado === 'PLANIFICADA' ? 'Planificada' : c.estado}</span>
-                      <span className="text-xs text-gray-400">{approved}/{campaignConts.length} piezas</span>
-                    </div>
-                  </button>
-                )
-              })}
+          <div className="space-y-4">
+            {/* Campaign filter pills */}
+            <div className="flex flex-wrap gap-2 items-center">
+              <span className="text-sm text-gray-500 font-medium">Filtrar:</span>
+              <button onClick={() => setFilterCampaign(null)}
+                className={`px-3 py-1 rounded-full text-sm font-medium border transition-colors ${!filterCampaign ? 'bg-gray-800 text-white border-gray-800' : 'bg-white text-gray-600 border-gray-300 hover:border-gray-400'}`}>
+                Todas
+              </button>
+              {campaigns.map((c: any, i) => (
+                <button key={c.id} onClick={() => setFilterCampaign(prev => prev === c.id ? null : c.id)}
+                  className={`px-3 py-1 rounded-full text-sm font-medium border transition-colors flex items-center gap-1.5 ${filterCampaign === c.id ? 'text-white border-transparent ' + CAMPAIGN_COLORS[i % CAMPAIGN_COLORS.length].replace('bg-','bg-') : 'bg-white text-gray-600 border-gray-300 hover:border-gray-400'}`}
+                  style={filterCampaign === c.id ? {} : {}}>
+                  <span className={`w-2 h-2 rounded-full ${CAMPAIGN_COLORS[i % CAMPAIGN_COLORS.length]}`} />
+                  {MONTH_NAMES[(c.mes||1)-1]} {c.anio || c.año}
+                </button>
+              ))}
             </div>
 
-            {/* Content panel */}
-            <div className="flex-1 space-y-4">
-              {selectedCampaign && (
-                <>
-                  <div className="card bg-gradient-to-r from-primary-50 to-blue-50 border-primary-100">
-                    <h2 className="font-semibold text-gray-900">{MONTH_NAMES[(selectedCampaign.mes||1)-1]} {selectedCampaign.anio || selectedCampaign.año}</h2>
-                    <p className="text-gray-600 mt-1">{selectedCampaign.objetivo_general || selectedCampaign.objetivoGeneral}</p>
-                    <div className="flex items-center gap-4 mt-3 text-sm text-gray-500">
-                      <span>{campaignContents.length} piezas de contenido</span>
-                      <span>{campaignContents.filter(c => c.estado === 'APROBADO' || c.estado === 'PUBLICADO').length} aprobadas</span>
-                    </div>
-                  </div>
+            {/* Calendar card */}
+            <div className="card p-0 overflow-hidden">
+              {/* Month header */}
+              <div className="flex items-center justify-between px-6 py-4 border-b bg-gray-50">
+                <button onClick={prevMonth} className="p-2 rounded-lg hover:bg-gray-200 transition-colors">
+                  <ChevronLeft className="w-5 h-5 text-gray-600" />
+                </button>
+                <h2 className="text-lg font-semibold text-gray-900">
+                  {MONTH_NAMES[month]} {year}
+                </h2>
+                <button onClick={nextMonth} className="p-2 rounded-lg hover:bg-gray-200 transition-colors">
+                  <ChevronRight className="w-5 h-5 text-gray-600" />
+                </button>
+              </div>
 
-                  {campaignContents.length === 0 ? (
-                    <div className="card text-center py-12">
-                      <FileText className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-                      <p className="text-gray-400">No hay contenido para esta campaña aún</p>
+              {/* Day names */}
+              <div className="grid grid-cols-7 border-b">
+                {DAY_NAMES.map(d => (
+                  <div key={d} className="py-2 text-center text-xs font-semibold text-gray-500 uppercase">{d}</div>
+                ))}
+              </div>
+
+              {/* Calendar cells */}
+              <div className="grid grid-cols-7 divide-x divide-y">
+                {Array.from({ length: totalCells }).map((_, idx) => {
+                  const dayNum = idx - firstDay + 1
+                  const validDay = dayNum >= 1 && dayNum <= daysInMonth
+                  const dayContents = validDay ? (contentsByDay[dayNum] || []) : []
+                  const isToday = validDay && new Date().getDate() === dayNum && new Date().getMonth() === month && new Date().getFullYear() === year
+                  const isSelected = validDay && selectedDay === dayNum
+                  return (
+                    <div key={idx} onClick={() => { if (validDay) setSelectedDay(prev => prev === dayNum ? null : dayNum) }}
+                      className={`min-h-[90px] p-2 transition-colors ${!validDay ? 'bg-gray-50' : 'cursor-pointer'} ${isSelected ? 'bg-blue-50' : validDay ? 'hover:bg-gray-50' : ''}`}>
+                      {validDay && (
+                        <>
+                          <div className={`text-sm font-medium mb-1.5 w-7 h-7 flex items-center justify-center rounded-full ${isToday ? 'bg-blue-600 text-white' : isSelected ? 'bg-blue-100 text-blue-700' : 'text-gray-700'}`}>
+                            {dayNum}
+                          </div>
+                          <div className="space-y-0.5">
+                            {dayContents.slice(0, 3).map((c: any) => {
+                              const color = campaignColorMap[c.campana_id || c.campanaId || c._campanaId] || 'bg-gray-400'
+                              return (
+                                <div key={c.id} className={`rounded px-1.5 py-0.5 text-white text-[11px] font-medium truncate leading-tight ${color}`}>
+                                  {c.titulo}
+                                </div>
+                              )
+                            })}
+                            {dayContents.length > 3 && (
+                              <div className="text-[11px] text-gray-500 pl-1">+{dayContents.length - 3} más</div>
+                            )}
+                          </div>
+                        </>
+                      )}
                     </div>
-                  ) : (
-                    <div className="grid gap-4 md:grid-cols-2">
-                      {campaignContents.map((c: any) => {
-                        const Icon = TIPO_ICONS[c.tipo] || FileText
-                        return (
-                          <div key={c.id} className="card hover:shadow-md transition-shadow">
-                            {c.tipo === 'IMAGEN' && (c.url_referencia || c.urlReferencia) && (
-                              <div className="-mx-6 -mt-6 mb-3 rounded-t-lg overflow-hidden h-48 bg-gray-100">
-                                <img src={c.url_referencia || c.urlReferencia} alt={c.titulo}
-                                  className="w-full h-full object-cover" onError={(e: any) => e.target.style.display='none'} />
-                              </div>
-                            )}
-                            {(c.tipo === 'VIDEO_FILE' || c.tipo === 'VIDEO_LINK') && (
-                              <div className="flex items-center justify-center -mx-6 -mt-6 mb-3 h-36 rounded-t-lg bg-gray-900">
-                                <FileVideo className="w-10 h-10 text-gray-400" />
-                              </div>
-                            )}
-                            <div className="flex items-center gap-2 mb-2">
-                              <Icon className="w-4 h-4 text-gray-400" />
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Selected day detail */}
+            {selectedDay && (
+              <div className="card">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-semibold text-gray-900">
+                    {selectedDay} de {MONTH_NAMES[month]}  {selectedDayContents.length} pieza{selectedDayContents.length !== 1 ? 's' : ''}
+                  </h3>
+                  <button onClick={() => setSelectedDay(null)} className="p-1 text-gray-400 hover:text-gray-600">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+                {selectedDayContents.length === 0 ? (
+                  <p className="text-gray-400 text-sm text-center py-6">No hay contenido programado para este día</p>
+                ) : (
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    {selectedDayContents.map((c: any) => {
+                      const Icon = TIPO_ICONS[c.tipo] || FileText
+                      const campColor = campaignColorMap[c.campana_id || c.campanaId || c._campanaId]
+                      return (
+                        <div key={c.id} className="rounded-lg border border-gray-200 overflow-hidden">
+                          {c.tipo === 'IMAGEN' && (c.url_referencia || c.urlReferencia) && (
+                            <div className="h-32 bg-gray-100 overflow-hidden">
+                              <img src={c.url_referencia || c.urlReferencia} alt={c.titulo}
+                                className="w-full h-full object-cover" onError={(e: any) => e.target.style.display='none'} />
+                            </div>
+                          )}
+                          <div className="p-3">
+                            <div className="flex items-center gap-1.5 mb-1.5">
+                              {campColor && <span className={`w-2 h-2 rounded-full shrink-0 ${campColor}`} />}
+                              <Icon className="w-3.5 h-3.5 text-gray-400" />
                               <span className="text-xs text-gray-500">{TIPO_LABELS[c.tipo] || c.tipo}</span>
-                              <span className={`ml-auto px-2 py-0.5 text-xs rounded-full font-medium ${STATUS_COLORS[c.estado] || 'bg-gray-100 text-gray-600'}`}>
+                              <span className={`ml-auto text-xs px-1.5 py-0.5 rounded-full font-medium ${STATUS_COLORS[c.estado] || 'bg-gray-100 text-gray-600'}`}>
                                 {STATUS_LABELS[c.estado] || c.estado}
                               </span>
                             </div>
-                            <h3 className="font-semibold text-gray-900 mb-1">{c.titulo}</h3>
-                            {c.descripcion && <p className="text-sm text-gray-500 mb-2">{c.descripcion}</p>}
-                            <div className="flex items-center justify-between mt-3 pt-3 border-t">
-                              <span className="text-xs text-gray-400">
-                                {c.fecha ? new Date(c.fecha).toLocaleDateString('es-MX', { day: 'numeric', month: 'long' }) : '-'}
-                              </span>
-                              {(c.url_referencia || c.urlReferencia) && (
-                                <a href={c.url_referencia || c.urlReferencia} target="_blank" rel="noopener noreferrer"
-                                  className="inline-flex items-center gap-1 text-xs text-primary-600 hover:text-primary-800">
-                                  <ExternalLink className="w-3 h-3" /> Ver
-                                </a>
-                              )}
-                            </div>
+                            <p className="font-medium text-gray-900 text-sm leading-snug">{c.titulo}</p>
+                            {c.descripcion && <p className="text-xs text-gray-500 mt-1 line-clamp-2">{c.descripcion}</p>}
+                            {(c.url_referencia || c.urlReferencia) && (
+                              <a href={c.url_referencia || c.urlReferencia} target="_blank" rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline mt-2">
+                                <ExternalLink className="w-3 h-3" /> Ver archivo
+                              </a>
+                            )}
                           </div>
-                        )
-                      })}
-                    </div>
-                  )}
-                </>
-              )}
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Summary row */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {(['PENDIENTE','EN_REVISION','APROBADO','PUBLICADO'] as const).map(status => {
+                const count = filteredContents.filter(c => {
+                  if (c.estado !== status) return false
+                  if (!c.fecha) return false
+                  const d = new Date(c.fecha)
+                  return d.getFullYear() === year && d.getMonth() === month
+                }).length
+                return (
+                  <div key={status} className={`rounded-xl p-4 ${STATUS_COLORS[status]}`}>
+                    <p className="text-2xl font-bold">{count}</p>
+                    <p className="text-xs font-medium mt-0.5">{STATUS_LABELS[status]}</p>
+                  </div>
+                )
+              })}
             </div>
           </div>
         )}
@@ -176,4 +260,3 @@ export default function PortalPage() {
     </AppLayout>
   )
 }
-
