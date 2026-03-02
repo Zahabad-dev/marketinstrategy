@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clientes - MarketInStrategy</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f3f4f6;
+        }
+        .navbar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .navbar h1 {
+            font-size: 1.5rem;
+        }
+        .navbar .user {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+        .navbar button {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            color: white;
+            cursor: pointer;
+        }
+        .navbar button:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        .header h2 {
+            color: #1f2937;
+            font-size: 2rem;
+        }
+        .btn-primary {
+            background: #2563eb;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .btn-primary:hover {
+            background: #1d4ed8;
+        }
+        .menu {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+        .menu a {
+            background: white;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            text-decoration: none;
+            color: #1f2937;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .menu a:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .clients-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+        .client-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+        }
+        .client-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+        }
+        .client-card h3 {
+            color: #1f2937;
+            margin-bottom: 0.5rem;
+        }
+        .client-card .email {
+            color: #6b7280;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+        .client-card .stats {
+            display: flex;
+            gap: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #e5e7eb;
+        }
+        .client-card .stat {
+            flex: 1;
+        }
+        .client-card .stat-label {
+            font-size: 0.75rem;
+            color: #9ca3af;
+        }
+        .client-card .stat-value {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: #2563eb;
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <h1>🎯 MarketInStrategy</h1>
+        <div class="user">
+            <span id="userName">Admin Principal</span>
+            <button onclick="logout()">Cerrar Sesión</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h2>👥 Mis Clientes</h2>
+            <button class="btn-primary" onclick="alert('Funcionalidad próximamente')">+ Nuevo Cliente</button>
+        </div>
+
+        <div class="menu">
+            <a href="/dashboard.html">📊 Dashboard</a>
+            <a href="/clients.html">👥 Clientes</a>
+            <a href="/campaigns.html">📢 Campañas</a>
+            <a href="/calendar.html">📅 Calendario</a>
+        </div>
+
+        <div class="clients-grid">
+            <div class="client-card">
+                <h3>Empresa ABC</h3>
+                <div class="email">contacto@empresaabc.com</div>
+                <div class="stats">
+                    <div class="stat">
+                        <div class="stat-label">Campañas</div>
+                        <div class="stat-value">3</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">Contenidos</div>
+                        <div class="stat-value">12</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="client-card">
+                <h3>Tech Solutions</h3>
+                <div class="email">info@techsolutions.com</div>
+                <div class="stats">
+                    <div class="stat">
+                        <div class="stat-label">Campañas</div>
+                        <div class="stat-value">2</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">Contenidos</div>
+                        <div class="stat-value">8</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="client-card">
+                <h3>Retail Store</h3>
+                <div class="email">marketing@retailstore.com</div>
+                <div class="stats">
+                    <div class="stat">
+                        <div class="stat-label">Campañas</div>
+                        <div class="stat-value">1</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">Contenidos</div>
+                        <div class="stat-value">5</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="client-card">
+                <h3>Food Delivery</h3>
+                <div class="email">social@fooddelivery.com</div>
+                <div class="stats">
+                    <div class="stat">
+                        <div class="stat-label">Campañas</div>
+                        <div class="stat-value">2</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">Contenidos</div>
+                        <div class="stat-value">20</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const user = localStorage.getItem('marketin_user');
+        if (!user) {
+            window.location.href = '/login.html';
+        } else {
+            const userData = JSON.parse(user);
+            document.getElementById('userName').textContent = userData.nombre;
+        }
+
+        function logout() {
+            localStorage.removeItem('marketin_user');
+            localStorage.removeItem('marketin_token');
+            window.location.href = '/login.html';
+        }
+    </script>
+</body>
+</html>

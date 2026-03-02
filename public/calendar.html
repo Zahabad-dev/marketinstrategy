@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendario - MarketInStrategy</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f3f4f6;
+        }
+        .navbar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .navbar h1 { font-size: 1.5rem; }
+        .navbar .user {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+        .navbar button {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            color: white;
+            cursor: pointer;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+        .menu {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .menu a {
+            background: white;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            text-decoration: none;
+            color: #1f2937;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .calendar {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .calendar h2 {
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+        }
+        .events {
+            display: grid;
+            gap: 1rem;
+        }
+        .event {
+            padding: 1rem;
+            border-left: 4px solid #2563eb;
+            background: #f9fafb;
+            border-radius: 6px;
+        }
+        .event.active {
+            border-left-color: #10b981;
+            background: #ecfdf5;
+        }
+        .event h3 {
+            color: #1f2937;
+            margin-bottom: 0.5rem;
+        }
+        .event .date {
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <h1>🎯 MarketInStrategy</h1>
+        <div class="user">
+            <span id="userName">Admin Principal</span>
+            <button onclick="logout()">Cerrar Sesión</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="menu">
+            <a href="/dashboard.html">📊 Dashboard</a>
+            <a href="/clients.html">👥 Clientes</a>
+            <a href="/campaigns.html">📢 Campañas</a>
+            <a href="/calendar.html">📅 Calendario</a>
+        </div>
+
+        <div class="calendar">
+            <h2>📅 Calendario de Contenidos - Marzo 2026</h2>
+            <div class="events">
+                <div class="event active">
+                    <h3>Post Instagram - Empresa ABC</h3>
+                    <div class="date">📅 Lunes 02 Mar - 10:00 AM</div>
+                </div>
+                <div class="event active">
+                    <h3>Video YouTube - Tech Solutions</h3>
+                    <div class="date">📅 Miércoles 04 Mar - 2:00 PM</div>
+                </div>
+                <div class="event">
+                    <h3>Email Marketing - Food Delivery</h3>
+                    <div class="date">📅 Viernes 06 Mar - 9:00 AM</div>
+                </div>
+                <div class="event">
+                    <h3>Post Facebook - Retail Store</h3>
+                    <div class="date">📅 Lunes 09 Mar - 11:00 AM</div>
+                </div>
+                <div class="event">
+                    <h3>Story Instagram - Empresa ABC</h3>
+                    <div class="date">📅 Miércoles 11 Mar - 5:00 PM</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const user = localStorage.getItem('marketin_user');
+        if (!user) {
+            window.location.href = '/login.html';
+        } else {
+            const userData = JSON.parse(user);
+            document.getElementById('userName').textContent = userData.nombre;
+        }
+
+        function logout() {
+            localStorage.removeItem('marketin_user');
+            localStorage.removeItem('marketin_token');
+            window.location.href = '/login.html';
+        }
+    </script>
+</body>
+</html>

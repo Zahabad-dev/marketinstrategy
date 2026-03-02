@@ -154,6 +154,15 @@
         const successDiv = document.getElementById('success');
         const submitBtn = document.getElementById('submitBtn');
 
+        // Usuario hardcodeado (sin base de datos)
+        const VALID_USERS = {
+            'admin@marketinstrategy.com': {
+                password: 'admin123',
+                nombre: 'Admin Principal',
+                rol: 'ADMIN'
+            }
+        };
+
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             
@@ -165,35 +174,33 @@
             submitBtn.disabled = true;
             submitBtn.textContent = 'Iniciando sesión...';
 
-            try {
-                const response = await fetch('/api/auth/login', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ email, password })
-                });
+            // Simular delay de red (más realista)
+            await new Promise(resolve => setTimeout(resolve, 500));
 
-                const data = await response.json();
+            // Validación del usuario
+            const user = VALID_USERS[email];
+            
+            if (user && user.password === password) {
+                // Login exitoso
+                const userData = {
+                    email: email,
+                    nombre: user.nombre,
+                    rol: user.rol
+                };
 
-                if (response.ok) {
-                    localStorage.setItem('accessToken', data.data.accessToken);
-                    localStorage.setItem('refreshToken', data.data.refreshToken);
-                    
-                    successDiv.textContent = '✓ Sesión iniciada correctamente';
-                    successDiv.classList.add('show');
-                    
-                    setTimeout(() => {
-                        window.location.href = '/dashboard';
-                    }, 1000);
-                } else {
-                    errorDiv.textContent = data.error || 'Error al iniciar sesión';
-                    errorDiv.classList.add('show');
-                }
-            } catch (error) {
-                errorDiv.textContent = 'Error de conexión. Verifica que las variables de entorno estén configuradas.';
+                localStorage.setItem('marketin_user', JSON.stringify(userData));
+                localStorage.setItem('marketin_token', 'demo-token-' + Date.now());
+                
+                successDiv.textContent = '✓ Sesión iniciada correctamente';
+                successDiv.classList.add('show');
+                
+                setTimeout(() => {
+                    window.location.href = '/dashboard.html';
+                }, 800);
+            } else {
+                // Login fallido
+                errorDiv.textContent = 'Email o contraseña incorrectos';
                 errorDiv.classList.add('show');
-            } finally {
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'Iniciar Sesión';
             }
