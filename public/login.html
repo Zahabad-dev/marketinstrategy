@@ -154,12 +154,29 @@
         const successDiv = document.getElementById('success');
         const submitBtn = document.getElementById('submitBtn');
 
-        // Usuario hardcodeado (sin base de datos)
+        // Usuarios hardcodeados (sin base de datos)
         const VALID_USERS = {
             'admin@marketinstrategy.com': {
                 password: 'admin123',
                 nombre: 'Admin Principal',
                 rol: 'ADMIN'
+            },
+            'cliente@empresaabc.com': {
+                password: 'cliente123',
+                nombre: 'María García',
+                rol: 'CLIENT',
+                clienteId: 'empresa-abc' // ID de la empresa que maneja
+            },
+            'cliente@techsolutions.com': {
+                password: 'tech123',
+                nombre: 'Carlos Rodríguez',
+                rol: 'CLIENT',
+                clienteId: 'tech-solutions'
+            },
+            'editor@marketinstrategy.com': {
+                password: 'editor123',
+                nombre: 'Ana Martínez',
+                rol: 'EDITOR'
             }
         };
 
@@ -185,7 +202,8 @@
                 const userData = {
                     email: email,
                     nombre: user.nombre,
-                    rol: user.rol
+                    rol: user.rol,
+                    clienteId: user.clienteId || null
                 };
 
                 localStorage.setItem('marketin_user', JSON.stringify(userData));

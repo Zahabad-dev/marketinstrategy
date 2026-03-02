@@ -215,6 +215,11 @@
         } else {
             const userData = JSON.parse(user);
             document.getElementById('userName').textContent = userData.nombre;
+            
+            // Si es un usuario CLIENT, redirigir a su vista personalizada
+            if (userData.rol === 'CLIENT') {
+                window.location.href = '/my-campaigns.html';
+            }
         }
 
         function logout() {

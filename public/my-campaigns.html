@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Campañas - MarketInStrategy</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f3f4f6;
+        }
+        .navbar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .navbar h1 {
+            font-size: 1.5rem;
+        }
+        .navbar .user {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+        .navbar button {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            color: white;
+            cursor: pointer;
+        }
+        .navbar button:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+        .header {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+        .header h2 {
+            color: #1a202c;
+            margin-bottom: 0.5rem;
+        }
+        .header p {
+            color: #6b7280;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .stat-card h3 {
+            color: #6b7280;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+        .stat-card .number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #2563eb;
+        }
+        .campaigns-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .campaigns-section h3 {
+            color: #1a202c;
+            margin-bottom: 1.5rem;
+        }
+        .campaign-card {
+            background: #f9fafb;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            border-left: 4px solid #2563eb;
+        }
+        .campaign-card h4 {
+            color: #1a202c;
+            margin-bottom: 0.5rem;
+        }
+        .campaign-meta {
+            display: flex;
+            gap: 2rem;
+            color: #6b7280;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+        .campaign-meta span {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+        .status {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        .status.active {
+            background: #d1fae5;
+            color: #059669;
+        }
+        .status.pending {
+            background: #fef3c7;
+            color: #d97706;
+        }
+        .status.completed {
+            background: #dbeafe;
+            color: #2563eb;
+        }
+        .content-list {
+            margin-top: 1rem;
+            padding-left: 1rem;
+        }
+        .content-item {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .content-item:last-child {
+            border-bottom: none;
+        }
+        .platform-badge {
+            background: #ede9fe;
+            color: #7c3aed;
+            padding: 0.25rem 0.5rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .back-link {
+            display: inline-block;
+            margin-bottom: 1rem;
+            color: #2563eb;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <h1>🎯 MarketInStrategy</h1>
+        <div class="user">
+            <span id="userName">Cargando...</span>
+            <button onclick="logout()">Cerrar Sesión</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <a href="/dashboard.html" class="back-link">← Volver al Dashboard</a>
+
+        <div class="header">
+            <h2>📊 Mis Campañas de Marketing</h2>
+            <p>Vista completa de todas tus campañas activas y contenido programado</p>
+        </div>
+
+        <div class="stats" id="stats">
+            <!-- Se llenarán con JavaScript -->
+        </div>
+
+        <div class="campaigns-section">
+            <h3>Campañas Activas</h3>
+            <div id="campaignsList">
+                <!-- Se llenarán con JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Verificar autenticación
+        const userStr = localStorage.getItem('marketin_user');
+        if (!userStr) {
+            window.location.href = '/login.html';
+        }
+
+        const currentUser = JSON.parse(userStr);
+        document.getElementById('userName').textContent = currentUser.nombre;
+
+        // Datos de campañas por cliente
+        const CAMPAIGN_DATA = {
+            'empresa-abc': {
+                empresa: 'Empresa ABC',
+                campanas: [
+                    {
+                        nombre: 'Campaña Verano 2026',
+                        estado: 'active',
+                        inicio: '01/03/2026',
+                        fin: '31/03/2026',
+                        contenidos: [
+                            { titulo: 'Post Instagram - Ofertas de Verano', plataforma: 'Instagram', fecha: '02/03/2026 10:00 AM' },
+                            { titulo: 'Video Promocional - YouTube', plataforma: 'YouTube', fecha: '05/03/2026 3:00 PM' },
+                            { titulo: 'Email Newsletter - Descuentos', plataforma: 'Email', fecha: '10/03/2026 9:00 AM' },
+                            { titulo: 'Story Instagram - Testimonios', plataforma: 'Instagram', fecha: '15/03/2026 5:00 PM' }
+                        ]
+                    },
+                    {
+                        nombre: 'Lanzamiento Producto Q2',
+                        estado: 'pending',
+                        inicio: '01/04/2026',
+                        fin: '30/04/2026',
+                        contenidos: [
+                            { titulo: 'Teaser Video - Próximamente', plataforma: 'YouTube', fecha: '25/03/2026 12:00 PM' },
+                            { titulo: 'Post Facebook - Anuncio', plataforma: 'Facebook', fecha: '01/04/2026 10:00 AM' }
+                        ]
+                    }
+                ]
+            },
+            'tech-solutions': {
+                empresa: 'Tech Solutions',
+                campanas: [
+                    {
+                        nombre: 'Transformación Digital 2026',
+                        estado: 'active',
+                        inicio: '15/02/2026',
+                        fin: '15/05/2026',
+                        contenidos: [
+                            { titulo: 'Webinar - IA en Negocios', plataforma: 'LinkedIn', fecha: '20/03/2026 4:00 PM' },
+                            { titulo: 'Blog Post - Case Study', plataforma: 'Web', fecha: '22/03/2026 9:00 AM' },
+                            { titulo: 'Post LinkedIn - Testimonios', plataforma: 'LinkedIn', fecha: '25/03/2026 10:00 AM' }
+                        ]
+                    },
+                    {
+                        nombre: 'Captación B2B',
+                        estado: 'active',
+                        inicio: '01/03/2026',
+                        fin: '31/05/2026',
+                        contenidos: [
+                            { titulo: 'Email Campaña - Servicios', plataforma: 'Email', fecha: '05/03/2026 8:00 AM' },
+                            { titulo: 'Infografía - Beneficios', plataforma: 'LinkedIn', fecha: '12/03/2026 11:00 AM' }
+                        ]
+                    }
+                ]
+            }
+        };
+
+        // Renderizar contenido según el usuario
+        function renderContent() {
+            const clienteId = currentUser.clienteId;
+            
+            if (!clienteId || !CAMPAIGN_DATA[clienteId]) {
+                document.getElementById('stats').innerHTML = '<p style="color: #6b7280;">No hay campañas asignadas a tu cuenta.</p>';
+                document.getElementById('campaignsList').innerHTML = '<p style="color: #6b7280;">Sin campañas.</p>';
+                return;
+            }
+
+            const data = CAMPAIGN_DATA[clienteId];
+            const totalCampanas = data.campanas.length;
+            const totalContenidos = data.campanas.reduce((sum, c) => sum + c.contenidos.length, 0);
+            const campanasActivas = data.campanas.filter(c => c.estado === 'active').length;
+
+            // Renderizar estadísticas
+            document.getElementById('stats').innerHTML = `
+                <div class="stat-card">
+                    <h3>Total Campañas</h3>
+                    <div class="number">${totalCampanas}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Campañas Activas</h3>
+                    <div class="number">${campanasActivas}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Contenidos Totales</h3>
+                    <div class="number">${totalContenidos}</div>
+                </div>
+            `;
+
+            // Renderizar campañas
+            const campanasHTML = data.campanas.map(campaign => {
+                const statusClass = campaign.estado === 'active' ? 'active' : campaign.estado === 'pending' ? 'pending' : 'completed';
+                const statusText = campaign.estado === 'active' ? 'Activa' : campaign.estado === 'pending' ? 'Pendiente' : 'Completada';
+                
+                const contenidosHTML = campaign.contenidos.map(content => `
+                    <div class="content-item">
+                        <div>
+                            <strong>${content.titulo}</strong><br>
+                            <small style="color: #6b7280;">${content.fecha}</small>
+                        </div>
+                        <span class="platform-badge">${content.plataforma}</span>
+                    </div>
+                `).join('');
+
+                return `
+                    <div class="campaign-card">
+                        <h4>${campaign.nombre}</h4>
+                        <div class="campaign-meta">
+                            <span>📅 ${campaign.inicio} - ${campaign.fin}</span>
+                            <span>📝 ${campaign.contenidos.length} contenidos</span>
+                            <span class="status ${statusClass}">${statusText}</span>
+                        </div>
+                        <div class="content-list">
+                            <strong>Contenidos Programados:</strong>
+                            ${contenidosHTML}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('campaignsList').innerHTML = campanasHTML;
+        }
+
+        function logout() {
+            localStorage.removeItem('marketin_user');
+            localStorage.removeItem('marketin_token');
+            window.location.href = '/login.html';
+        }
+
+        // Inicializar
+        renderContent();
+    </script>
+</body>
+</html>
