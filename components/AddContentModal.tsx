@@ -262,7 +262,7 @@ export function AddContentModal({
               const client = clients.find(c => c.id === campaign.clienteId)
               return (
                 <option key={campaign.id} value={campaign.id}>
-                  {client?.nombreEmpresa} - {campaign.objetivoGeneral} ({campaign.mes}/{campaign.año})
+                  {client?.nombreEmpresa} - {campaign.objetivoGeneral} ({campaign.mes}/{campaign.anio})
                 </option>
               )
             })}

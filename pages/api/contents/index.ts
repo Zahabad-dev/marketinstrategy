@@ -26,7 +26,7 @@ export default async function handler(
       }
       
       const filters = {
-        campañaId: req.query.campañaId as string | undefined,
+        campanaId: req.query.campanaId as string | undefined,
         estado: req.query.estado as ContentStatus | undefined,
         tipo: req.query.tipo as ContentType | undefined,
       }

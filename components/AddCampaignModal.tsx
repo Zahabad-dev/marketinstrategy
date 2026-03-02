@@ -80,7 +80,7 @@ export function AddCampaignModal({
         body: JSON.stringify({
           clienteId,
           mes: Number(mes),
-          año: Number(año),
+          anio: Number(año),
           objetivoGeneral,
           estado
         })

@@ -22,16 +22,16 @@ export default async function handler(
     }
     
     // Get year and month from query
-    const año = parseInt(req.query.año as string) || new Date().getFullYear()
+    const anio = parseInt(req.query.año as string) || new Date().getFullYear()
     const mes = parseInt(req.query.mes as string) || new Date().getMonth() + 1
     
     // Get campaigns for this month/year
-    const campaigns = await CampaignModel.getByYearMonth(año, mes)
+    const campaigns = await CampaignModel.getByYearMonth(anio, mes)
     
     return res.status(200).json({
       success: true,
       data: {
-        año,
+        anio,
         mes,
         campaigns
       }

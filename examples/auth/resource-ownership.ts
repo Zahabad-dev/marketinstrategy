@@ -50,7 +50,7 @@ export default async function handler(
     
     if (req.method === 'PUT') {
       // ✅ Verificar si puede MODIFICAR este cliente
-      if (!canModifyResource(payload.rol, payload.userId, client.usuarioId)) {
+      if (!canModifyResource(payload.rol, payload.userId, client.usuarioId ?? '')) {
         return ApiResponse.forbidden(res, 'No puedes modificar este cliente')
       }
       
@@ -63,7 +63,7 @@ export default async function handler(
     if (req.method === 'DELETE') {
       // ✅ Verificar si puede ELIMINAR este cliente
       // Normalmente solo ADMIN puede eliminar, o el propietario si es CLIENT
-      if (!canDeleteResource(payload.rol, payload.userId, client.usuarioId)) {
+      if (!canDeleteResource(payload.rol, payload.userId, client.usuarioId ?? '')) {
         return ApiResponse.forbidden(res, 'No puedes eliminar este cliente')
       }
       

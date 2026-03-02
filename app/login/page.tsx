@@ -1,10 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useAuth } from '@/contexts/AuthContext'
 
 export default function LoginPage() {
-  const router = useRouter()
+  const { login } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -16,86 +16,73 @@ export default function LoginPage() {
     setLoading(true)
 
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      })
-
-      const data = await response.json()
-
-      if (response.ok) {
-        localStorage.setItem('accessToken', data.data.accessToken)
-        localStorage.setItem('refreshToken', data.data.refreshToken)
-        router.push('/')
-      } else {
-        setError(data.error || 'Error al iniciar sesión')
-      }
-    } catch (err) {
-      setError('Error de conexión')
+      await login(email, password)
+    } catch (err: any) {
+      setError(err.message || 'Error al iniciar sesiÃ³n')
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            SaaS Marketing
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Inicia sesión en tu cuenta
-          </p>
+    <div className="min-h-screen bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">MarketInStrategy</h1>
+          <p className="text-gray-600">Sistema de GestiÃ³n de CampaÃ±as</p>
         </div>
-        
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+
+        <form onSubmit={handleSubmit} className="space-y-6">
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
               {error}
             </div>
           )}
 
-          <div className="rounded-md shadow-sm -space-y-px">
-            <div>
-              <label htmlFor="email" className="sr-only">Email</label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
-                placeholder="Email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
-            <div>
-              <label htmlFor="password" className="sr-only">Password</label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
-                placeholder="Contraseña"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+              Email
+            </label>
+            <input
+              id="email"
+              type="email"
+              required
+              className="input"
+              placeholder="tu@email.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
           </div>
 
           <div>
-            <button
-              type="submit"
-              disabled={loading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50"
-            >
-              {loading ? 'Cargando...' : 'Iniciar Sesión'}
-            </button>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+              ContraseÃ±a
+            </label>
+            <input
+              id="password"
+              type="password"
+              required
+              className="input"
+              placeholder=""
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
           </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full btn btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? 'Ingresando...' : 'Iniciar SesiÃ³n'}
+          </button>
         </form>
+
+        <div className="mt-6 text-center text-sm text-gray-500 bg-gray-50 rounded-lg p-3">
+          <p className="font-medium text-gray-600 mb-1">Credenciales de acceso:</p>
+          <p>Email: <span className="font-mono text-primary-600">admin@marketinstrategy.com</span></p>
+          <p>ContraseÃ±a: <span className="font-mono text-primary-600">admin123</span></p>
+        </div>
       </div>
     </div>
   )

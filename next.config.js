@@ -1,12 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: false,
-  swcMinify: true,
-  
-  // CRITICAL: Skip middleware completely
-  skipMiddlewareUrlNormalize: true,
-  skipTrailingSlashRedirect: true,
-  
+
+  // Allow cross-origin requests from local network
+  allowedDevOrigins: ['192.168.100.7', '192.168.100.*', 'localhost'],
+
   // Environment variables
   env: {
     NEXT_PUBLIC_APP_NAME: 'MarketInStrategy',

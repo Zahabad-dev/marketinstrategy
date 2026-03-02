@@ -35,14 +35,14 @@ export const CampaignSchema = `
     id VARCHAR(36) PRIMARY KEY,
     cliente_id VARCHAR(36) NOT NULL,
     mes INT NOT NULL CHECK (mes BETWEEN 1 AND 12),
-    año INT NOT NULL,
+    anio INT NOT NULL,
     objetivo_general TEXT NOT NULL,
     estado ENUM('PLANIFICADA', 'EN_PROGRESO', 'COMPLETADA', 'CANCELADA') DEFAULT 'PLANIFICADA',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (cliente_id) REFERENCES clients(id) ON DELETE CASCADE,
     INDEX idx_cliente_id (cliente_id),
-    INDEX idx_mes_año (mes, año),
+    INDEX idx_mes_anio (mes, anio),
     INDEX idx_estado (estado)
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 `
@@ -50,7 +50,7 @@ export const CampaignSchema = `
 export const ContentSchema = `
   CREATE TABLE IF NOT EXISTS contenidos_calendarizados (
     id VARCHAR(36) PRIMARY KEY,
-    campaña_id VARCHAR(36) NOT NULL,
+    campana_id VARCHAR(36) NOT NULL,
     fecha DATE NOT NULL,
     titulo VARCHAR(300) NOT NULL,
     descripcion TEXT,

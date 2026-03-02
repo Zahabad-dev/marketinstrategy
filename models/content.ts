@@ -1,4 +1,4 @@
-import { ContenidoCalendarizado, ContenidoCalendarizadoCreateInput, ContenidoCalendarizadoUpdateInput, ContentType, ContentStatus } from '@/types'
+﻿import { ContenidoCalendarizado, ContenidoCalendarizadoCreateInput, ContenidoCalendarizadoUpdateInput, ContentType, ContentStatus } from '@/types'
 import { db } from '@/lib/db'
 import { v4 as uuidv4 } from 'uuid'
 import { RowDataPacket } from 'mysql2'
@@ -17,9 +17,9 @@ export class ContentModel {
   /**
    * Find contents by campaign ID
    */
-  static async findByCampañaId(campañaId: string): Promise<ContenidoCalendarizado[]> {
-    const query = 'SELECT * FROM contenidos_calendarizados WHERE campaña_id = ? ORDER BY fecha ASC'
-    const [rows] = await db.execute(query, [campañaId])
+  static async findByCampanaId(campanaId: string): Promise<ContenidoCalendarizado[]> {
+    const query = 'SELECT * FROM contenidos_calendarizados WHERE campana_id = ? ORDER BY fecha ASC'
+    const [rows] = await db.execute(query, [campanaId])
     return rows as ContenidoCalendarizado[]
   }
 
@@ -34,13 +34,13 @@ export class ContentModel {
     
     const query = `
       INSERT INTO contenidos_calendarizados 
-      (id, campaña_id, fecha, titulo, descripcion, tipo, url_referencia, archivo_local, estado)
+      (id, campana_id, fecha, titulo, descripcion, tipo, url_referencia, archivo_local, estado)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `
     
     await db.execute(query, [
       id,
-      data.campañaId,
+      data.campanaId,
       fecha,
       data.titulo,
       data.descripcion || null,
@@ -116,15 +116,15 @@ export class ContentModel {
    * List contents with filters
    */
   static async list(
-    filters?: { campañaId?: string; tipo?: ContentType; estado?: ContentStatus; fechaInicio?: Date; fechaFin?: Date }, 
+    filters?: { campanaId?: string; tipo?: ContentType; estado?: ContentStatus; fechaInicio?: Date; fechaFin?: Date }, 
     pagination?: { page: number; perPage: number }
   ): Promise<ContenidoCalendarizado[]> {
     let query = 'SELECT * FROM contenidos_calendarizados WHERE 1=1'
     const values: any[] = []
 
-    if (filters?.campañaId) {
-      query += ' AND campaña_id = ?'
-      values.push(filters.campañaId)
+    if (filters?.campanaId) {
+      query += ' AND campana_id = ?'
+      values.push(filters.campanaId)
     }
 
     if (filters?.tipo) {
@@ -151,8 +151,7 @@ export class ContentModel {
 
     if (pagination?.perPage) {
       const offset = ((pagination.page || 1) - 1) * pagination.perPage
-      query += ' LIMIT ? OFFSET ?'
-      values.push(pagination.perPage, offset)
+      query += ` LIMIT ${parseInt(String(pagination.perPage))} OFFSET ${parseInt(String(offset))}`
     }
 
     const [rows] = await db.execute(query, values)
@@ -162,13 +161,13 @@ export class ContentModel {
   /**
    * Count contents
    */
-  static async count(filters?: { campañaId?: string; tipo?: ContentType; estado?: ContentStatus }): Promise<number> {
+  static async count(filters?: { campanaId?: string; tipo?: ContentType; estado?: ContentStatus }): Promise<number> {
     let query = 'SELECT COUNT(*) as total FROM contenidos_calendarizados WHERE 1=1'
     const values: any[] = []
 
-    if (filters?.campañaId) {
-      query += ' AND campaña_id = ?'
-      values.push(filters.campañaId)
+    if (filters?.campanaId) {
+      query += ' AND campana_id = ?'
+      values.push(filters.campanaId)
     }
 
     if (filters?.tipo) {

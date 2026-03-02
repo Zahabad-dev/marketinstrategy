@@ -38,7 +38,7 @@ export class ClientModel {
       id,
       data.nombreEmpresa,
       data.contacto,
-      data.usuarioId,
+      data.usuarioId || null,
     ])
 
     return this.findById(id) as Promise<Client>
@@ -107,8 +107,7 @@ export class ClientModel {
 
     if (pagination?.perPage) {
       const offset = ((pagination.page || 1) - 1) * pagination.perPage
-      query += ' LIMIT ? OFFSET ?'
-      values.push(pagination.perPage, offset)
+      query += ` LIMIT ${parseInt(String(pagination.perPage))} OFFSET ${parseInt(String(offset))}`
     }
 
     const [rows] = await db.execute(query, values)

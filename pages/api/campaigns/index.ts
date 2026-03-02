@@ -1,11 +1,10 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
-import { CampaignModel } from '@/models'
+import { CampaignModel, ClientModel } from '@/models'
 import { 
   requireAuth,
   createCampaignSchema,
   paginationSchema,
   validate,
-  getAccessibleCampaignFilter,
   ApiResponse
 } from '@/lib'
 import { ZodError } from 'zod'
@@ -26,12 +25,20 @@ export default async function handler(
         perPage: validatedPagination.perPage ?? 20,
       }
       
-      const filters = {
+      const filters: any = {
         clienteId: req.query.clienteId as string | undefined,
         estado: req.query.estado as CampaignStatus | undefined,
         mes: req.query.mes ? parseInt(req.query.mes as string) : undefined,
-        año: req.query.año ? parseInt(req.query.año as string) : undefined,
-        ...getAccessibleCampaignFilter(payload.rol, payload.userId)
+        anio: req.query.año ? parseInt(req.query.año as string) : undefined,
+      }
+
+      // CLIENT role: restrict to their own campaigns
+      if (payload.rol === 'CLIENT') {
+        const clientProfiles = await ClientModel.findByUsuarioId(payload.userId)
+        if (clientProfiles.length === 0) {
+          return ApiResponse.success(res, { data: [], total: 0, page: 1, perPage: pagination.perPage, totalPages: 0 })
+        }
+        filters.clienteId = clientProfiles[0].id
       }
       
       const [campaigns, total] = await Promise.all([

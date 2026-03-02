@@ -27,7 +27,7 @@ export const updateUserSchema = z.object({
 export const createClientSchema = z.object({
   nombreEmpresa: z.string().min(1, 'El nombre de empresa es requerido'),
   contacto: z.string().min(1, 'El contacto es requerido'),
-  usuarioId: z.string().uuid('ID de usuario inválido'),
+  usuarioId: z.string().uuid('ID de usuario inválido').optional().nullable(),
 })
 
 export const updateClientSchema = z.object({
@@ -41,14 +41,14 @@ export const updateClientSchema = z.object({
 export const createCampaignSchema = z.object({
   clienteId: z.string().uuid('ID de cliente inválido'),
   mes: z.number().int().min(1, 'El mes debe ser entre 1 y 12').max(12, 'El mes debe ser entre 1 y 12'),
-  año: z.number().int().min(2020, 'El año debe ser válido'),
+  anio: z.number().int().min(2020, 'El año debe ser válido'),
   objetivoGeneral: z.string().min(1, 'El objetivo general es requerido'),
   estado: z.nativeEnum(CampaignStatus).optional(),
 })
 
 export const updateCampaignSchema = z.object({
   mes: z.number().int().min(1).max(12).optional(),
-  año: z.number().int().min(2020).optional(),
+  anio: z.number().int().min(2020).optional(),
   objetivoGeneral: z.string().min(1).optional(),
   estado: z.nativeEnum(CampaignStatus).optional(),
 })
@@ -57,7 +57,7 @@ export const updateCampaignSchema = z.object({
  * Content Validation Schemas
  */
 export const createContentSchema = z.object({
-  campañaId: z.string().uuid('ID de campaña inválido'),
+  campanaId: z.string().uuid('ID de campaña inválido'),
   fecha: z.string().or(z.date()),
   titulo: z.string().min(1, 'El título es requerido'),
   descripcion: z.string().optional(),

@@ -1,411 +1,242 @@
-'use client'
+﻿'use client'
 
-import { useEffect, useState, useRef } from 'react'
-import { useRouter } from 'next/navigation'
-import FullCalendar from '@fullcalendar/react'
-import dayGridPlugin from '@fullcalendar/daygrid'
-import interactionPlugin from '@fullcalendar/interaction'
-import { EventClickArg, EventContentArg } from '@fullcalendar/core'
-import { ContentDetailModal } from '@/components/ContentDetailModal'
-import { ContenidoCalendarizado, ContentType } from '@/types'
-import { Calendar as CalendarIcon, Filter, X } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { ChevronLeft, ChevronRight, Image, FileVideo, Link2, FileText } from 'lucide-react'
+import AppLayout from '@/components/AppLayout'
+import { useAuth } from '@/contexts/AuthContext'
 
-// Configuración de colores por tipo de contenido
-const contentTypeColors = {
-  VIDEO_LINK: '#8B5CF6', // Purple
-  VIDEO_FILE: '#3B82F6', // Blue
-  IMAGEN: '#10B981',     // Green
-  PDF: '#EF4444',        // Red
+const MONTH_NAMES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
+const DAY_NAMES = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb']
+
+const TIPO_ICONS: Record<string, any> = {
+  IMAGEN: Image, VIDEO_FILE: FileVideo, VIDEO_LINK: Link2, PDF: FileText,
 }
-
-interface Campaign {
-  id: string
-  clienteId: string
-  mes: number
-  año: number
-  objetivoGeneral: string
+const STATUS_DOT: Record<string, string> = {
+  PENDIENTE: 'bg-gray-400', EN_REVISION: 'bg-yellow-500', APROBADO: 'bg-green-500',
+  PUBLICADO: 'bg-blue-500', RECHAZADO: 'bg-red-500',
 }
-
-interface Client {
-  id: string
-  nombreEmpresa: string
+const STATUS_LABELS: Record<string, string> = {
+  PENDIENTE: 'Pendiente', EN_REVISION: 'En Revisión', APROBADO: 'Aprobado',
+  PUBLICADO: 'Publicado', RECHAZADO: 'Rechazado',
 }
 
 export default function CalendarPage() {
-  const router = useRouter()
-  const calendarRef = useRef<FullCalendar>(null)
-  
-  const [contents, setContents] = useState<ContenidoCalendarizado[]>([])
-  const [campaigns, setCampaigns] = useState<Campaign[]>([])
-  const [clients, setClients] = useState<Client[]>([])
+  const { getToken } = useAuth()
+  const [contents, setContents] = useState<any[]>([])
+  const [campaigns, setCampaigns] = useState<any[]>([])
+  const [clients, setClients] = useState<any[]>([])
+  const [currentDate, setCurrentDate] = useState(new Date())
   const [loading, setLoading] = useState(true)
-  
-  const [selectedContent, setSelectedContent] = useState<ContenidoCalendarizado | null>(null)
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  
-  const [selectedCampaign, setSelectedCampaign] = useState<string>('')
-  const [selectedClient, setSelectedClient] = useState<string>('')
-  const [showFilters, setShowFilters] = useState(false)
+  const [selected, setSelected] = useState<any[]>([])
+  const [selectedDay, setSelectedDay] = useState<number|null>(null)
 
-  useEffect(() => {
-    const token = localStorage.getItem('accessToken')
-    if (!token) {
-      router.push('/login')
-      return
-    }
+  const year = currentDate.getFullYear()
+  const month = currentDate.getMonth()
 
-    fetchInitialData(token)
-  }, [router])
+  useEffect(() => { fetchData() }, [year, month])
 
-  useEffect(() => {
-    const token = localStorage.getItem('accessToken')
-    if (token && (selectedCampaign || selectedClient)) {
-      fetchContents(token)
-    }
-  }, [selectedCampaign, selectedClient])
-
-  const fetchInitialData = async (token: string) => {
+  const fetchData = async () => {
+    setLoading(true)
+    const token = getToken()
+    const h = { Authorization: `Bearer ${token}` }
     try {
-      setLoading(true)
-      
-      // Fetch clients
-      const clientsRes = await fetch('/api/clients?perPage=100', {
-        headers: { 'Authorization': `Bearer ${token}` },
-      })
-      
-      if (clientsRes.ok) {
-        const clientsData = await clientsRes.json()
-        setClients(clientsData.data.data || [])
-      }
-
-      // Fetch campaigns
-      const campaignsRes = await fetch('/api/campaigns?perPage=100', {
-        headers: { 'Authorization': `Bearer ${token}` },
-      })
-      
-      if (campaignsRes.ok) {
-        const campaignsData = await campaignsRes.json()
-        setCampaigns(campaignsData.data.data || [])
-      }
-
-      // Fetch all contents initially
-      await fetchContents(token)
-    } catch (error) {
-      console.error('Error fetching initial data:', error)
-    } finally {
-      setLoading(false)
-    }
+      const [coR, caR, clR] = await Promise.all([
+        fetch('/api/contents', { headers: h }),
+        fetch(`/api/campaigns/calendar?año=${year}&mes=${month+1}`, { headers: h }),
+        fetch('/api/clients', { headers: h }),
+      ])
+      setContents((await coR.json()).data?.data || [])
+      const calData = await caR.json()
+      setCampaigns(calData.data?.campaigns || [])
+      setClients((await clR.json()).data?.data || [])
+    } catch {} finally { setLoading(false) }
   }
 
-  const fetchContents = async (token: string) => {
-    try {
-      let url = '/api/contents?perPage=1000'
-      
-      if (selectedCampaign) {
-        url += `&campañaId=${selectedCampaign}`
-      }
-      
-      // If client is selected but not campaign, filter campaigns by client first
-      if (selectedClient && !selectedCampaign) {
-        const clientCampaigns = campaigns.filter(c => c.clienteId === selectedClient)
-        if (clientCampaigns.length > 0) {
-          const campaignIds = clientCampaigns.map(c => c.id).join(',')
-          // Note: API might not support multiple IDs, fetch all and filter client-side
-          url = '/api/contents?perPage=1000'
-        }
-      }
-
-      const response = await fetch(url, {
-        headers: { 'Authorization': `Bearer ${token}` },
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        let fetchedContents = data.data.data || []
-
-        // Client-side filtering if needed
-        if (selectedClient && !selectedCampaign) {
-          const clientCampaignIds = campaigns
-            .filter(c => c.clienteId === selectedClient)
-            .map(c => c.id)
-          
-          fetchedContents = fetchedContents.filter((content: ContenidoCalendarizado) =>
-            clientCampaignIds.includes(content.campañaId)
-          )
-        }
-
-        setContents(fetchedContents)
-      } else if (response.status === 401) {
-        router.push('/login')
-      }
-    } catch (error) {
-      console.error('Error fetching contents:', error)
-    }
+  const getContentForDay = (day: number) => {
+    return contents.filter(c => {
+      if (!c.fecha) return false
+      const d = new Date(c.fecha)
+      return d.getFullYear() === year && d.getMonth() === month && d.getDate() === day
+    })
   }
 
-  const handleEventClick = (clickInfo: EventClickArg) => {
-    const contentId = clickInfo.event.id
-    const content = contents.find(c => c.id === contentId)
-    
-    if (content) {
-      setSelectedContent(content)
-      setIsModalOpen(true)
-    }
+  const firstDay = new Date(year, month, 1).getDay()
+  const daysInMonth = new Date(year, month + 1, 0).getDate()
+  const cells: (number | null)[] = []
+  for (let i = 0; i < firstDay; i++) cells.push(null)
+  for (let i = 1; i <= daysInMonth; i++) cells.push(i)
+  while (cells.length % 7 !== 0) cells.push(null)
+
+  const handleDayClick = (day: number) => {
+    const dayContents = getContentForDay(day)
+    setSelected(dayContents)
+    setSelectedDay(day)
   }
 
-  const renderEventContent = (eventInfo: EventContentArg) => {
-    const content = contents.find(c => c.id === eventInfo.event.id)
-    if (!content) return null
+  const clientName = (campaignId: string) => {
+    const cam = campaigns.find((c: any) => c.id === campaignId)
+    if (!cam) return ''
+    const cl = clients.find((c: any) => c.id === (cam.cliente_id || cam.clienteId))
+    return cl?.nombre_empresa || ''
+  }
 
-    const typeLabels: Record<ContentType, string> = {
-      VIDEO_LINK: '📹',
-      VIDEO_FILE: '🎬',
-      IMAGEN: '🖼️',
-      PDF: '📄',
-    }
+  return (
+    <AppLayout>
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Calendario</h1>
+          <p className="text-gray-600 mt-1">Vista mensual de contenido calendarizado</p>
+        </div>
 
-    return (
-      <div className="fc-event-content-wrapper">
-        <div className="fc-event-title-container">
-          <div className="fc-event-title fc-sticky">
-            <span className="mr-1">{typeLabels[content.tipo as ContentType]}</span>
-            {eventInfo.event.title}
+        <div className="flex gap-6 flex-col lg:flex-row">
+          {/* Calendar */}
+          <div className="card flex-1">
+            <div className="flex items-center justify-between mb-4">
+              <button onClick={() => setCurrentDate(new Date(year, month - 1))} className="btn btn-secondary p-2">
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+              <h2 className="text-lg font-semibold text-gray-900">
+                {MONTH_NAMES[month]} {year}
+              </h2>
+              <button onClick={() => setCurrentDate(new Date(year, month + 1))} className="btn btn-secondary p-2">
+                <ChevronRight className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Legend */}
+            <div className="flex flex-wrap gap-3 mb-4 text-xs">
+              {Object.entries(STATUS_LABELS).map(([k,v]) => (
+                <div key={k} className="flex items-center gap-1">
+                  <div className={`w-2 h-2 rounded-full ${STATUS_DOT[k]}`} />
+                  <span className="text-gray-500">{v}</span>
+                </div>
+              ))}
+            </div>
+
+            {loading ? (
+              <div className="text-center py-12 text-gray-500">Cargando...</div>
+            ) : (
+              <div className="grid grid-cols-7 gap-1">
+                {DAY_NAMES.map(d => (
+                  <div key={d} className="text-center text-xs font-medium text-gray-500 py-2">{d}</div>
+                ))}
+                {cells.map((day, i) => {
+                  const dayContents = day ? getContentForDay(day) : []
+                  const isToday = day === new Date().getDate() && month === new Date().getMonth() && year === new Date().getFullYear()
+                  const isSelected = day === selectedDay
+                  return (
+                    <div key={i}
+                      onClick={() => day && handleDayClick(day)}
+                      className={`min-h-[80px] rounded-lg p-1 border ${day ? 'cursor-pointer hover:bg-primary-50 hover:border-primary-200' : 'border-transparent'} ${isSelected ? 'border-primary-400 bg-primary-50' : 'border-gray-100'} ${!day ? '' : ''}`}
+                    >
+                      {day && (
+                        <>
+                          <div className={`text-sm font-medium w-6 h-6 flex items-center justify-center rounded-full mb-1 ${isToday ? 'bg-primary-600 text-white' : 'text-gray-700'}`}>
+                            {day}
+                          </div>
+                          <div className="space-y-0.5">
+                            {dayContents.slice(0, 3).map((c: any) => {
+                              const Icon = TIPO_ICONS[c.tipo] || FileText
+                              return (
+                                <div key={c.id} className="flex items-center gap-1 text-xs truncate">
+                                  <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${STATUS_DOT[c.estado] || 'bg-gray-400'}`} />
+                                  <span className="truncate text-gray-600">{c.titulo}</span>
+                                </div>
+                              )
+                            })}
+                            {dayContents.length > 3 && (
+                              <div className="text-xs text-gray-400">+{dayContents.length - 3} más</div>
+                            )}
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Day detail panel */}
+          <div className="w-full lg:w-80">
+            {selectedDay && selected.length > 0 ? (
+              <div className="card">
+                <h3 className="font-semibold text-gray-900 mb-4">
+                  {selectedDay} de {MONTH_NAMES[month]}
+                </h3>
+                <div className="space-y-3">
+                  {selected.map((c: any) => {
+                    const Icon = TIPO_ICONS[c.tipo] || FileText
+                    return (
+                      <div key={c.id} className="border rounded-lg p-3 hover:border-primary-200 transition-colors">
+                        <div className="flex items-start gap-2">
+                          <Icon className="w-4 h-4 text-gray-400 mt-0.5 shrink-0" />
+                          <div className="min-w-0">
+                            <p className="font-medium text-gray-900 text-sm truncate">{c.titulo}</p>
+                            {c.descripcion && <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{c.descripcion}</p>}
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className={`px-1.5 py-0.5 text-xs rounded-full ${STATUS_DOT[c.estado]?.replace('bg-', 'bg-').replace('-400', '-100').replace('-500', '-100')} text-gray-700`}>
+                                {STATUS_LABELS[c.estado] || c.estado}
+                              </span>
+                            </div>
+                            {clientName(c.campana_id || c.campanaId) && (
+                              <p className="text-xs text-gray-400 mt-1">{clientName(c.campana_id || c.campanaId)}</p>
+                            )}
+                            {(c.url_referencia || c.urlReferencia) && (
+                              <a href={c.url_referencia || c.urlReferencia} target="_blank" rel="noopener noreferrer"
+                                className="text-xs text-primary-600 hover:underline mt-1 block truncate">
+                                Ver archivo ↗
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            ) : (
+              <div className="card text-center py-12">
+                <Calendar className="w-8 h-8 text-gray-300 mx-auto mb-3" />
+                <p className="text-gray-400 text-sm">
+                  {selectedDay ? 'Sin contenido para este día' : 'Selecciona un día para ver el contenido'}
+                </p>
+              </div>
+            )}
+
+            {/* This month campaigns */}
+            {campaigns.length > 0 && (
+              <div className="card mt-4">
+                <h3 className="font-semibold text-gray-900 mb-3 text-sm">Campañas activas en {MONTH_NAMES[month]}</h3>
+                <div className="space-y-2">
+                  {campaigns.map((c: any) => {
+                    const cl = clients.find((cl: any) => cl.id === (c.cliente_id || c.clienteId))
+                    return (
+                      <div key={c.id} className="flex items-center gap-2 text-sm">
+                        <div className="w-2 h-2 rounded-full bg-primary-400 shrink-0" />
+                        <div>
+                          <p className="text-gray-700 font-medium">{cl?.nombre_empresa || 'Cliente'}</p>
+                          <p className="text-gray-400 text-xs truncate">{c.objetivo_general || c.objetivoGeneral}</p>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
-    )
-  }
-
-  const calendarEvents = contents.map(content => ({
-    id: content.id,
-    title: content.titulo,
-    start: content.fecha,
-    backgroundColor: contentTypeColors[content.tipo as ContentType],
-    borderColor: contentTypeColors[content.tipo as ContentType],
-    extendedProps: {
-      tipo: content.tipo,
-      estado: content.estado,
-    },
-  }))
-
-  const clearFilters = () => {
-    setSelectedCampaign('')
-    setSelectedClient('')
-  }
-
-  const hasActiveFilters = selectedCampaign || selectedClient
-
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-3">
-              <CalendarIcon className="w-8 h-8 text-blue-600" />
-              <h1 className="text-2xl font-bold text-gray-900">Calendario de Contenidos</h1>
-            </div>
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => setShowFilters(!showFilters)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                  showFilters
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-                }`}
-              >
-                <Filter className="w-4 h-4" />
-                Filtros
-                {hasActiveFilters && (
-                  <span className="bg-white text-blue-600 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
-                    {(selectedClient ? 1 : 0) + (selectedCampaign ? 1 : 0)}
-                  </span>
-                )}
-              </button>
-              <a
-                href="/"
-                className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
-              >
-                ← Dashboard
-              </a>
-            </div>
-          </div>
-
-          {/* Filtros */}
-          {showFilters && (
-            <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* Filtro Cliente */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Cliente
-                  </label>
-                  <select
-                    value={selectedClient}
-                    onChange={(e) => setSelectedClient(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">Todos los clientes</option>
-                    {clients.map((client) => (
-                      <option key={client.id} value={client.id}>
-                        {client.nombreEmpresa}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Filtro Campaña */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Campaña
-                  </label>
-                  <select
-                    value={selectedCampaign}
-                    onChange={(e) => setSelectedCampaign(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    disabled={!selectedClient && campaigns.length === 0}
-                  >
-                    <option value="">Todas las campañas</option>
-                    {(selectedClient
-                      ? campaigns.filter(c => c.clienteId === selectedClient)
-                      : campaigns
-                    ).map((campaign) => (
-                      <option key={campaign.id} value={campaign.id}>
-                        {campaign.objetivoGeneral} ({campaign.mes}/{campaign.año})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Botón limpiar */}
-                <div className="flex items-end">
-                  {hasActiveFilters && (
-                    <button
-                      onClick={clearFilters}
-                      className="w-full px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2"
-                    >
-                      <X className="w-4 h-4" />
-                      Limpiar filtros
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      </header>
-
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Leyenda de colores */}
-        <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
-          <h3 className="text-sm font-semibold text-gray-700 mb-3">Tipos de Contenido</h3>
-          <div className="flex flex-wrap gap-4">
-            <div className="flex items-center gap-2">
-              <div
-                className="w-4 h-4 rounded"
-                style={{ backgroundColor: contentTypeColors.IMAGEN }}
-              />
-              <span className="text-sm text-gray-600">🖼️ Imagen</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div
-                className="w-4 h-4 rounded"
-                style={{ backgroundColor: contentTypeColors.VIDEO_LINK }}
-              />
-              <span className="text-sm text-gray-600">📹 Video Link</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div
-                className="w-4 h-4 rounded"
-                style={{ backgroundColor: contentTypeColors.VIDEO_FILE }}
-              />
-              <span className="text-sm text-gray-600">🎬 Video File</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div
-                className="w-4 h-4 rounded"
-                style={{ backgroundColor: contentTypeColors.PDF }}
-              />
-              <span className="text-sm text-gray-600">📄 PDF</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Calendario */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          {loading ? (
-            <div className="p-8 text-center text-gray-500">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4" />
-              Cargando calendario...
-            </div>
-          ) : (
-            <FullCalendar
-              ref={calendarRef}
-              plugins={[dayGridPlugin, interactionPlugin]}
-              initialView="dayGridMonth"
-              locale="es"
-              headerToolbar={{
-                left: 'prev,next today',
-                center: 'title',
-                right: 'dayGridMonth,dayGridWeek',
-              }}
-              buttonText={{
-                today: 'Hoy',
-                month: 'Mes',
-                week: 'Semana',
-              }}
-              events={calendarEvents}
-              eventClick={handleEventClick}
-              eventContent={renderEventContent}
-              height="auto"
-              eventDisplay="block"
-              displayEventTime={false}
-              dayMaxEvents={3}
-              moreLinkText={(num: number) => `+${num} más`}
-            />
-          )}
-        </div>
-
-        {/* Estadísticas */}
-        {!loading && contents.length > 0 && (
-          <div className="mt-6 bg-white rounded-lg shadow-sm p-6">
-            <h3 className="text-sm font-semibold text-gray-700 mb-4">Resumen</h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="text-center p-4 bg-gray-50 rounded-lg">
-                <div className="text-2xl font-bold text-gray-900">{contents.length}</div>
-                <div className="text-sm text-gray-600">Total contenidos</div>
-              </div>
-              <div className="text-center p-4 bg-green-50 rounded-lg">
-                <div className="text-2xl font-bold text-green-600">
-                  {contents.filter(c => c.tipo === 'IMAGEN').length}
-                </div>
-                <div className="text-sm text-gray-600">Imágenes</div>
-              </div>
-              <div className="text-center p-4 bg-blue-50 rounded-lg">
-                <div className="text-2xl font-bold text-blue-600">
-                  {contents.filter(c => c.tipo === 'VIDEO_LINK' || c.tipo === 'VIDEO_FILE').length}
-                </div>
-                <div className="text-sm text-gray-600">Videos</div>
-              </div>
-              <div className="text-center p-4 bg-red-50 rounded-lg">
-                <div className="text-2xl font-bold text-red-600">
-                  {contents.filter(c => c.tipo === 'PDF').length}
-                </div>
-                <div className="text-sm text-gray-600">PDFs</div>
-              </div>
-            </div>
-          </div>
-        )}
-      </main>
-
-      {/* Modal de detalles */}
-      <ContentDetailModal
-        isOpen={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false)
-          setSelectedContent(null)
-        }}
-        content={selectedContent}
-      />
-    </div>
+    </AppLayout>
   )
 }
+
+// Fix missing Calendar import in inner scope
+function Calendar(props: any) {
+  return (
+    <svg {...props} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+    </svg>
+  )
+}
+

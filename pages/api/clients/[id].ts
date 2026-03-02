@@ -35,7 +35,7 @@ export default async function handler(
         return ApiResponse.notFound(res, 'Cliente no encontrado')
       }
       
-      if (!canModifyResource(payload.rol, payload.userId, client.usuarioId)) {
+      if (!canModifyResource(payload.rol, payload.userId, client.usuarioId ?? '')) {
         return ApiResponse.forbidden(res)
       }
       
@@ -51,7 +51,7 @@ export default async function handler(
         return ApiResponse.notFound(res, 'Cliente no encontrado')
       }
       
-      if (!canDeleteResource(payload.rol, payload.userId, client.usuarioId)) {
+      if (!canDeleteResource(payload.rol, payload.userId, client.usuarioId ?? '')) {
         return ApiResponse.forbidden(res)
       }
       

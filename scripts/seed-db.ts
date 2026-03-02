@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Seed script to populate database with sample data
  */
 
@@ -56,7 +56,7 @@ async function main() {
     const campaign1 = await CampaignModel.create({
       clienteId: cliente1.id,
       mes: 3,
-      año: 2026,
+      anio: 2026,
       objetivoGeneral: 'Lanzamiento de nuevo producto SaaS - aumentar awareness en redes sociales',
       estado: CampaignStatus.EN_PROGRESO,
     })
@@ -65,7 +65,7 @@ async function main() {
     const campaign2 = await CampaignModel.create({
       clienteId: cliente2.id,
       mes: 3,
-      año: 2026,
+      anio: 2026,
       objetivoGeneral: 'Colección primavera - campaña de Instagram y TikTok',
       estado: CampaignStatus.PLANIFICADA,
     })
@@ -73,7 +73,7 @@ async function main() {
 
     // Create content for campaign 1
     await ContentModel.create({
-      campañaId: campaign1.id,
+      campanaId: campaign1.id,
       fecha: new Date('2026-03-05'),
       titulo: 'Video demo del producto',
       descripcion: 'Video demostrativo de 60 segundos mostrando características principales',
@@ -84,7 +84,7 @@ async function main() {
     console.log('✅ Contenido creado: Video demo')
 
     await ContentModel.create({
-      campañaId: campaign1.id,
+      campanaId: campaign1.id,
       fecha: new Date('2026-03-10'),
       titulo: 'Infografía características',
       descripcion: 'Infografía destacando los 5 beneficios principales',
@@ -96,7 +96,7 @@ async function main() {
 
     // Create content for campaign 2
     await ContentModel.create({
-      campañaId: campaign2.id,
+      campanaId: campaign2.id,
       fecha: new Date('2026-03-08'),
       titulo: 'Catálogo Primavera 2026',
       descripcion: 'PDF con la colección completa de primavera',
@@ -121,3 +121,4 @@ async function main() {
 }
 
 main()
+

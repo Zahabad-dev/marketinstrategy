@@ -13,6 +13,7 @@ interface AuthContextType {
   isEditor: () => boolean
   isClient: () => boolean
   refreshUser: () => Promise<void>
+  getToken: () => string | null
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -26,19 +27,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     checkAuth()
   }, [])
 
+  const getToken = () => {
+    if (typeof window === 'undefined') return null
+    return localStorage.getItem('accessToken')
+  }
+
   const checkAuth = async () => {
     try {
-      const token = localStorage.getItem('accessToken')
+      const token = getToken()
       if (!token) {
         setLoading(false)
         return
       }
 
-      // Fetch current user info
       const response = await fetch('/api/auth/me', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        headers: { 'Authorization': `Bearer ${token}` }
       })
 
       if (response.ok) {
@@ -66,14 +69,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (!response.ok) {
       const error = await response.json()
-      throw new Error(error.error || 'Error al iniciar sesión')
+      throw new Error(error.error || 'Credenciales inválidas')
     }
 
     const data = await response.json()
     localStorage.setItem('accessToken', data.data.accessToken)
     localStorage.setItem('refreshToken', data.data.refreshToken)
-    
     setUser(data.data.user)
+    router.push('/dashboard')
   }
 
   const logout = () => {
@@ -101,7 +104,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isAdmin,
         isEditor,
         isClient,
-        refreshUser
+        refreshUser,
+        getToken,
       }}
     >
       {children}

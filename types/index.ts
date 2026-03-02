@@ -25,7 +25,7 @@ export interface Client {
   id: string
   nombreEmpresa: string
   contacto: string
-  usuarioId: string // User ID
+  usuarioId?: string | null // User ID (optional)
   createdAt: Date
   updatedAt: Date
 }
@@ -46,7 +46,7 @@ export interface Campaign {
   id: string
   clienteId: string
   mes: number // 1-12
-  año: number
+  anio: number
   objetivoGeneral: string
   estado: CampaignStatus
   createdAt: Date
@@ -78,7 +78,7 @@ export enum ContentStatus {
 // ContenidoCalendarizado Interface
 export interface ContenidoCalendarizado {
   id: string
-  campañaId: string
+  campanaId: string
   fecha: Date
   titulo: string
   descripcion?: string
@@ -94,7 +94,7 @@ export type ContenidoCalendarizadoCreateInput = Omit<ContenidoCalendarizado, 'id
   estado?: ContentStatus
   fecha: Date | string
 }
-export type ContenidoCalendarizadoUpdateInput = Partial<Omit<ContenidoCalendarizado, 'id' | 'createdAt' | 'campañaId' |'fecha' | 'urlReferencia' | 'archivoLocal'>> & {
+export type ContenidoCalendarizadoUpdateInput = Partial<Omit<ContenidoCalendarizado, 'id' | 'createdAt' | 'campanaId' |'fecha' | 'urlReferencia' | 'archivoLocal'>> & {
   fecha?: Date | string
   urlReferencia?: string | null
   archivoLocal?: string | null
