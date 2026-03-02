@@ -22,6 +22,7 @@ export default function ClientsPage() {
   const [modal, setModal] = useState<'create' | 'edit' | null>(null)
   const [form, setForm] = useState<any>(EMPTY_FORM)
   const [editId, setEditId] = useState<string | null>(null)
+  const [editHasAccount, setEditHasAccount] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [successInfo, setSuccessInfo] = useState<{ empresa: string; email: string; password: string } | null>(null)
@@ -44,13 +45,13 @@ export default function ClientsPage() {
   const openCreate = () => { setForm(EMPTY_FORM); setEditId(null); setError(''); setModal('create') }
   const openEdit = (c: any) => {
     setForm({ nombre_empresa: c.nombre_empresa, contacto: c.contacto || '', userEmail: '', userPassword: '', userNombre: '', createAccount: false })
-    setEditId(c.id); setError(''); setModal('edit')
+    setEditId(c.id); setEditHasAccount(!!c.usuario_id); setError(''); setModal('edit')
   }
   const closeModal = () => { setModal(null); setError('') }
 
   const handleSave = async () => {
     if (!form.nombre_empresa.trim()) { setError('El nombre de empresa es requerido'); return }
-    if (modal === 'create' && form.createAccount) {
+    if (form.createAccount) {
       if (!form.userEmail.trim()) { setError('El email del usuario es requerido'); return }
       if (!form.userPassword || form.userPassword.length < 6) { setError('La contrasena debe tener al menos 6 caracteres'); return }
       if (!form.userNombre.trim()) { setError('El nombre del usuario es requerido'); return }
@@ -62,7 +63,7 @@ export default function ClientsPage() {
       let usuarioId: string | null = null
 
       // Step 1: create user account if requested
-      if (!isEdit && form.createAccount && isAdmin()) {
+      if (form.createAccount && isAdmin()) {
         const userRes = await fetch('/api/users', {
           method: 'POST',
           headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
@@ -83,7 +84,7 @@ export default function ClientsPage() {
       })
       if (!res.ok) { const d = await res.json(); setError(d.error || 'Error al guardar'); setSaving(false); return }
       closeModal(); fetchClients()
-      if (!isEdit && form.createAccount && usuarioId) {
+      if (form.createAccount && usuarioId) {
         setSuccessInfo({ empresa: form.nombre_empresa, email: form.userEmail.trim(), password: form.userPassword })
       }
     } catch { setError('Error al guardar') } finally { setSaving(false) }
@@ -116,7 +117,7 @@ export default function ClientsPage() {
             <div className="flex items-start gap-3">
               <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 shrink-0" />
               <div className="flex-1">
-                <p className="font-semibold text-green-800">Cliente creado con acceso al portal</p>
+                <p className="font-semibold text-green-800">Acceso al portal asignado</p>
                 <p className="text-sm text-green-700 mt-1"><strong>{successInfo.empresa}</strong> puede iniciar sesion con:</p>
                 <div className="mt-2 bg-white rounded-lg border border-green-200 p-3 text-sm font-mono space-y-1">
                   <p><span className="text-gray-500 font-sans">Email:</span> {successInfo.email}</p>
@@ -222,7 +223,7 @@ export default function ClientsPage() {
                 </div>
               </div>
 
-              {modal === 'create' && isAdmin() && (
+              {isAdmin() && (modal === 'create' || (modal === 'edit' && !editHasAccount)) && (
                 <div className="border-t pt-4">
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
@@ -235,7 +236,7 @@ export default function ClientsPage() {
                         <div className="w-10 h-5 bg-gray-200 peer-checked:bg-blue-600 rounded-full transition-colors" />
                         <div className="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform peer-checked:translate-x-5" />
                       </div>
-                      <span className="text-sm text-gray-600">Crear cuenta</span>
+                      <span className="text-sm text-gray-600">{modal === 'create' ? 'Crear cuenta' : 'Asignar acceso'}</span>
                     </label>
                   </div>
                   {form.createAccount && (
