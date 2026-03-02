@@ -64,3 +64,5 @@ Thumbs.db
 # Old project structure (if migrating)
 /backend/
 /frontend/
+
+.env.vercel.production
