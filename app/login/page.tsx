@@ -18,7 +18,7 @@ export default function LoginPage() {
     try {
       await login(email, password)
     } catch (err: any) {
-      setError(err.message || 'Error al iniciar sesiÃ³n')
+      setError(err.message || 'Error al iniciar sesión')
     } finally {
       setLoading(false)
     }
@@ -29,7 +29,7 @@ export default function LoginPage() {
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">MarketInStrategy</h1>
-          <p className="text-gray-600">Sistema de GestiÃ³n de CampaÃ±as</p>
+          <p className="text-gray-600">Sistema de Gestión de Campañas</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -56,7 +56,7 @@ export default function LoginPage() {
 
           <div>
             <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-              ContraseÃ±a
+              Contraseña
             </label>
             <input
               id="password"
@@ -74,14 +74,14 @@ export default function LoginPage() {
             disabled={loading}
             className="w-full btn btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? 'Ingresando...' : 'Iniciar SesiÃ³n'}
+            {loading ? 'Ingresando...' : 'Iniciar Sesión'}
           </button>
         </form>
 
         <div className="mt-6 text-center text-sm text-gray-500 bg-gray-50 rounded-lg p-3">
           <p className="font-medium text-gray-600 mb-1">Credenciales de acceso:</p>
           <p>Email: <span className="font-mono text-primary-600">admin@marketinstrategy.com</span></p>
-          <p>ContraseÃ±a: <span className="font-mono text-primary-600">admin123</span></p>
+          <p>Contraseña: <span className="font-mono text-primary-600">admin123</span></p>
         </div>
       </div>
     </div>

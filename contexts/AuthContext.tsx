@@ -76,7 +76,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('accessToken', data.data.accessToken)
     localStorage.setItem('refreshToken', data.data.refreshToken)
     setUser(data.data.user)
-    router.push('/dashboard')
+    if (data.data.user?.rol === UserRole.CLIENT) {
+      router.push('/portal')
+    } else {
+      router.push('/dashboard')
+    }
   }
 
   const logout = () => {
