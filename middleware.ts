@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { verifyAccessToken } from '@/lib/auth'
 
 /**
  * Middleware for Next.js
@@ -45,36 +44,8 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl)
   }
   
-  // Verify token
-  const payload = verifyAccessToken(token)
-  
-  if (!payload) {
-    // Invalid token
-    if (pathname.startsWith('/api/')) {
-      return NextResponse.json(
-        { success: false, error: 'Token inválido o expirado' },
-        { status: 401 }
-      )
-    }
-    
-    const loginUrl = new URL('/login', request.url)
-    loginUrl.searchParams.set('from', pathname)
-    return NextResponse.redirect(loginUrl)
-  }
-  
-  // Attach user to request for API routes
-  if (pathname.startsWith('/api/')) {
-    const requestHeaders = new Headers(request.headers)
-    requestHeaders.set('x-user-id', payload.userId)
-    requestHeaders.set('x-user-role', payload.rol)
-    
-    return NextResponse.next({
-      request: {
-        headers: requestHeaders,
-      },
-    })
-  }
-  
+  // Token exists - proceed to route
+  // (Actual token verification happens in API routes)
   return NextResponse.next()
 }
 
