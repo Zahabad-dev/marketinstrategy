@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MarketInStrategy - Sistema de Marketing Digital</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 60px 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+            animation: fadeIn 0.6s ease-out;
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        h1 {
+            font-size: 3rem;
+            color: #1a202c;
+            margin-bottom: 20px;
+            font-weight: 800;
+        }
+        .emoji {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            display: block;
+        }
+        p {
+            color: #4a5568;
+            font-size: 1.25rem;
+            margin-bottom: 40px;
+            line-height: 1.6;
+        }
+        .buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        a {
+            padding: 16px 32px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            display: block;
+        }
+        .btn-primary {
+            background: #2563eb;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #1d4ed8;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(37, 99, 235, 0.3);
+        }
+        .btn-secondary {
+            background: #10b981;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background: #059669;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
+        }
+        .status {
+            background: #f3f4f6;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 30px;
+        }
+        .status p {
+            margin: 0;
+            font-size: 0.9rem;
+            color: #6b7280;
+        }
+        .badge {
+            display: inline-block;
+            background: #10b981;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <span class="emoji">🎯</span>
+        <h1>MarketInStrategy</h1>
+        <span class="badge">✓ SISTEMA ACTIVO</span>
+        <p>Sistema de Gestión de Marketing Digital<br>Plataforma Profesional SaaS</p>
+        
+        <div class="buttons">
+            <a href="/login" class="btn-primary">🔐 Iniciar Sesión</a>
+            <a href="/dashboard" class="btn-secondary">📊 Ver Dashboard</a>
+        </div>
+
+        <div class="status">
+            <p><strong>Estado:</strong> Deployment Exitoso</p>
+            <p><strong>Servidor:</strong> Vercel Production</p>
+            <p><strong>Última actualización:</strong> <span id="timestamp"></span></p>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('timestamp').textContent = new Date().toLocaleString('es-MX', {
+            dateStyle: 'short',
+            timeStyle: 'short'
+        });
+    </script>
+</body>
+</html>
