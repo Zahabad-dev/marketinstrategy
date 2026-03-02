@@ -32,6 +32,9 @@ export class UserModel {
     const id = uuidv4()
     const hashedPassword = await hashPassword(data.password!)
     
+    // Asegurar que rol sea CLIENT si no se especifica
+    const rol = data.rol !== undefined && data.rol !== null ? data.rol : UserRole.CLIENT
+    
     const query = `
       INSERT INTO users (id, nombre, email, password, rol)
       VALUES (?, ?, ?, ?, ?)
@@ -42,7 +45,7 @@ export class UserModel {
       data.nombre,
       data.email,
       hashedPassword,
-      data.rol || UserRole.CLIENT,
+      rol,
     ])
 
     return this.findById(id) as Promise<User>

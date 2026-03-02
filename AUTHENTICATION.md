@@ -103,12 +103,19 @@ if (!canDeleteResource(userRole, userId, resourceOwnerId)) {
 **POST** `/api/auth/register`
 
 ```typescript
-// Request
+// Request (sin especificar rol - por defecto será CLIENT)
 {
   "email": "usuario@example.com",
   "password": "contraseña123",
-  "nombre": "Juan Pérez",
-  "rol": "CLIENT" // opcional, por defecto CLIENT
+  "nombre": "Juan Pérez"
+}
+
+// Request (especificando rol - requiere permisos de admin para roles EDITOR/ADMIN)
+{
+  "email": "editor@example.com",
+  "password": "editor123",
+  "nombre": "Editor Usuario",
+  "rol": "EDITOR"
 }
 
 // Response
@@ -119,11 +126,14 @@ if (!canDeleteResource(userRole, userId, resourceOwnerId)) {
     "email": "usuario@example.com",
     "nombre": "Juan Pérez",
     "rol": "CLIENT",
-    "createdAt": "2026-03-01T00:00:00.000Z"
+    "created_at": "2026-03-01T00:00:00.000Z",
+    "updated_at": "2026-03-01T00:00:00.000Z"
   },
   "message": "Usuario registrado exitosamente"
 }
 ```
+
+**Nota importante:** Si no se especifica el campo `rol` en el request, el sistema automáticamente asignará el rol `CLIENT` por defecto.
 
 ### 2. Login
 
@@ -521,6 +531,198 @@ curl -X POST http://localhost:3000/api/auth/refresh \
 - [bcrypt](https://www.npmjs.com/package/bcryptjs) - Password hashing
 - [Next.js Middleware](https://nextjs.org/docs/app/building-your-application/routing/middleware) - Documentación oficial
 
+## 👤 Gestión de Usuarios (Admin)
+
+Los administradores tienen acceso completo a la gestión de usuarios a través de los endpoints `/api/users`.
+
+### Crear Usuario (POST /api/users)
+
+Solo administradores pueden crear usuarios con cualquier rol.
+
+```bash
+# Crear un usuario CLIENT
+curl -X POST http://localhost:3000/api/users \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_ADMIN_TOKEN" \
+  -d '{
+    "email": "cliente@empresa.com",
+    "password": "cliente123",
+    "nombre": "Cliente Empresa"
+  }'
+
+# Crear un usuario EDITOR
+curl -X POST http://localhost:3000/api/users \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_ADMIN_TOKEN" \
+  -d '{
+    "email": "editor@marketing.com",
+    "password": "editor123",
+    "nombre": "Editor Marketing",
+    "rol": "EDITOR"
+  }'
+
+# Crear un usuario ADMIN
+curl -X POST http://localhost:3000/api/users \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_ADMIN_TOKEN" \
+  -d '{
+    "email": "admin@sistema.com",
+    "password": "admin123",
+    "nombre": "Admin Sistema",
+    "rol": "ADMIN"
+  }'
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "uuid-generado",
+    "email": "cliente@empresa.com",
+    "nombre": "Cliente Empresa",
+    "rol": "CLIENT",
+    "created_at": "2026-03-02T00:00:00.000Z",
+    "updated_at": "2026-03-02T00:00:00.000Z"
+  },
+  "message": "Usuario creado exitosamente"
+}
+```
+
+### Listar Usuarios (GET /api/users)
+
+```bash
+# Listar todos los usuarios con paginación
+curl -X GET "http://localhost:3000/api/users?page=1&perPage=20" \
+  -H "Authorization: Bearer YOUR_ADMIN_TOKEN"
+
+# Filtrar por rol
+curl -X GET "http://localhost:3000/api/users?rol=CLIENT&page=1&perPage=20" \
+  -H "Authorization: Bearer YOUR_ADMIN_TOKEN"
+
+# Buscar por nombre o email
+curl -X GET "http://localhost:3000/api/users?search=juan&page=1&perPage=20" \
+  -H "Authorization: Bearer YOUR_ADMIN_TOKEN"
+
+# Combinar filtros
+curl -X GET "http://localhost:3000/api/users?rol=EDITOR&search=marketing&page=1&perPage=10" \
+  -H "Authorization: Bearer YOUR_ADMIN_TOKEN"
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "data": [
+      {
+        "id": "uuid-1",
+        "email": "usuario@example.com",
+        "nombre": "Juan Pérez",
+        "rol": "CLIENT",
+        "created_at": "2026-03-01T00:00:00.000Z",
+        "updated_at": "2026-03-01T00:00:00.000Z"
+      },
+      {
+        "id": "uuid-2",
+        "email": "editor@marketing.com",
+        "nombre": "Editor Marketing",
+        "rol": "EDITOR",
+        "created_at": "2026-03-01T00:00:00.000Z",
+        "updated_at": "2026-03-01T00:00:00.000Z"
+      }
+    ],
+    "total": 15,
+    "page": 1,
+    "perPage": 20,
+    "totalPages": 1
+  }
+}
+```
+
+### Obtener Usuario (GET /api/users/:id)
+
+```bash
+curl -X GET "http://localhost:3000/api/users/uuid-del-usuario" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+### Actualizar Usuario (PUT /api/users/:id)
+
+Administradores pueden actualizar cualquier usuario. Usuarios normales solo pueden actualizar su propio perfil.
+
+```bash
+# Como Admin - actualizar nombre y rol
+curl -X PUT "http://localhost:3000/api/users/uuid-del-usuario" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_ADMIN_TOKEN" \
+  -d '{
+    "nombre": "Nombre Actualizado",
+    "rol": "EDITOR"
+  }'
+
+# Como Usuario - actualizar solo su nombre
+curl -X PUT "http://localhost:3000/api/users/su-propio-uuid" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -d '{
+    "nombre": "Mi Nuevo Nombre"
+  }'
+```
+
+### Eliminar Usuario (DELETE /api/users/:id)
+
+Solo administradores pueden eliminar usuarios.
+
+```bash
+curl -X DELETE "http://localhost:3000/api/users/uuid-del-usuario" \
+  -H "Authorization: Bearer YOUR_ADMIN_TOKEN"
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "message": "Usuario eliminado"
+  }
+}
+```
+
+### 📝 Credenciales de Ejemplo
+
+**Usuario Cliente (de la documentación):**
+```json
+{
+  "email": "usuario@example.com",
+  "password": "contraseña123",
+  "nombre": "Juan Pérez",
+  "rol": "CLIENT"
+}
+```
+
+**Usuario Editor:**
+```json
+{
+  "email": "editor@marketing.com",
+  "password": "editor123",
+  "nombre": "Editor Marketing",
+  "rol": "EDITOR"
+}
+```
+
+**Usuario Admin:**
+```json
+{
+  "email": "admin@marketing.com",
+  "password": "admin123",
+  "nombre": "Admin Sistema",
+  "rol": "ADMIN"
+}
+```
+
+**Nota importante sobre el rol CLIENT:** Si al registrar o crear un usuario NO se especifica el campo `rol`, el sistema automáticamente asignará el rol `CLIENT` por defecto. Esto está configurado tanto en el código como en el esquema de la base de datos.
+
 ## 🆘 Troubleshooting
 
 ### Token Inválido
@@ -539,3 +741,14 @@ curl -X POST http://localhost:3000/api/auth/refresh \
 
 - Verificar que el userId en el token coincida con un usuario existente
 - Confirmar que la base de datos esté conectada correctamente
+
+### El rol CLIENT no se asigna por defecto
+
+Si al crear un usuario no se especifica el rol y no se asigna `CLIENT` automáticamente:
+
+1. **Verificar el modelo de usuario** - Debe tener la lógica: `const rol = data.rol !== undefined && data.rol !== null ? data.rol : UserRole.CLIENT`
+2. **Verificar la base de datos** - El campo `rol` debe tener `DEFAULT 'CLIENT'` en su definición
+3. **Verificar el request** - Asegurarse de que no se esté enviando `rol: null` o `rol: ""` en el body
+4. **Verificar logs** - Revisar qué valor se está insertando en la base de datos
+
+**Solución rápida:** Especificar explícitamente `"rol": "CLIENT"` en el request de registro/creación.
