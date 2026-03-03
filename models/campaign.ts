@@ -18,7 +18,7 @@ export class CampaignModel {
    * Find campaigns by client ID
    */
   static async findByClienteId(clienteId: string): Promise<Campaign[]> {
-    const query = 'SELECT * FROM campaigns WHERE cliente_id = ? ORDER BY anio DESC, mes DESC'
+    const query = 'SELECT * FROM campaigns WHERE cliente_id = ? ORDER BY año DESC, mes DESC'
     const [rows] = await db.execute(query, [clienteId])
     return rows as Campaign[]
   }
@@ -27,7 +27,7 @@ export class CampaignModel {
    * Find campaign by client, month and year
    */
   static async findByClienteMesAnio(clienteId: string, mes: number, anio: number): Promise<Campaign | null> {
-    const query = 'SELECT * FROM campaigns WHERE cliente_id = ? AND mes = ? AND anio = ?'
+    const query = 'SELECT * FROM campaigns WHERE cliente_id = ? AND mes = ? AND año = ?'
     const [rows] = await db.execute(query, [clienteId, mes, anio])
     const campaigns = rows as Campaign[]
     return campaigns[0] || null
@@ -40,7 +40,7 @@ export class CampaignModel {
     const id = uuidv4()
     
     const query = `
-      INSERT INTO campaigns (id, cliente_id, mes, anio, objetivo_general, estado)
+      INSERT INTO campaigns (id, cliente_id, mes, año, objetivo_general, estado)
       VALUES (?, ?, ?, ?, ?, ?)
     `
     
@@ -68,7 +68,7 @@ export class CampaignModel {
       values.push(data.mes)
     }
     if (data.anio !== undefined) {
-      updates.push('anio = ?')
+      updates.push('año = ?')
       values.push(data.anio)
     }
     if (data.objetivoGeneral !== undefined) {
@@ -123,7 +123,7 @@ export class CampaignModel {
     }
 
     if (filters?.anio) {
-      query += ' AND anio = ?'
+      query += ' AND año = ?'
       values.push(filters.anio)
     }
 
@@ -132,7 +132,7 @@ export class CampaignModel {
       values.push(filters.mes)
     }
 
-    query += ' ORDER BY anio DESC, mes DESC'
+    query += ' ORDER BY año DESC, mes DESC'
 
     if (pagination?.perPage) {
       const offset = ((pagination.page || 1) - 1) * pagination.perPage
@@ -161,7 +161,7 @@ export class CampaignModel {
     }
 
     if (filters?.anio) {
-      query += ' AND anio = ?'
+      query += ' AND año = ?'
       values.push(filters.anio)
     }
 
@@ -175,7 +175,7 @@ export class CampaignModel {
   static async getByYearMonth(anio: number, mes: number): Promise<Campaign[]> {
     const query = `
       SELECT * FROM campaigns 
-      WHERE anio = ? AND mes = ?
+      WHERE año = ? AND mes = ?
       ORDER BY cliente_id
     `
     
