@@ -22,8 +22,8 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
  * Generate JWT access token
  */
 export function generateAccessToken(payload: JWTPayload): string {
-  const secret = process.env.JWT_SECRET!
-  const expiresIn = process.env.JWT_EXPIRES_IN || '7d'
+  const secret = process.env.JWT_SECRET!.trim()
+  const expiresIn = (process.env.JWT_EXPIRES_IN || '7d').trim()
   // @ts-expect-error - jwt.sign types are overly strict, expiresIn accepts string like '7d'
   return jwt.sign(payload, secret, { expiresIn })
 }
@@ -32,8 +32,8 @@ export function generateAccessToken(payload: JWTPayload): string {
  * Generate JWT refresh token
  */
 export function generateRefreshToken(payload: JWTPayload): string {
-  const secret = process.env.REFRESH_TOKEN_SECRET!
-  const expiresIn = process.env.REFRESH_TOKEN_EXPIRES_IN || '30d'
+  const secret = process.env.REFRESH_TOKEN_SECRET!.trim()
+  const expiresIn = (process.env.REFRESH_TOKEN_EXPIRES_IN || '30d').trim()
   // @ts-expect-error - jwt.sign types are overly strict, expiresIn accepts string like '30d'
   return jwt.sign(payload, secret, { expiresIn })
 }
@@ -43,7 +43,7 @@ export function generateRefreshToken(payload: JWTPayload): string {
  */
 export function verifyAccessToken(token: string): JWTPayload | null {
   try {
-    return jwt.verify(token, process.env.JWT_SECRET!) as JWTPayload
+    return jwt.verify(token, process.env.JWT_SECRET!.trim()) as JWTPayload
   } catch (error) {
     return null
   }
@@ -54,7 +54,7 @@ export function verifyAccessToken(token: string): JWTPayload | null {
  */
 export function verifyRefreshToken(token: string): JWTPayload | null {
   try {
-    return jwt.verify(token, process.env.REFRESH_TOKEN_SECRET!) as JWTPayload
+    return jwt.verify(token, process.env.REFRESH_TOKEN_SECRET!.trim()) as JWTPayload
   } catch (error) {
     return null
   }
