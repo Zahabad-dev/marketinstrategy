@@ -18,7 +18,7 @@ export class ContentModel {
    * Find contents by campaign ID
    */
   static async findByCampanaId(campanaId: string): Promise<ContenidoCalendarizado[]> {
-    const query = 'SELECT * FROM contenidos_calendarizados WHERE campana_id = ? ORDER BY fecha ASC'
+    const query = 'SELECT * FROM contenidos_calendarizados WHERE campaña_id = ? ORDER BY fecha ASC'
     const [rows] = await db.execute(query, [campanaId])
     return rows as ContenidoCalendarizado[]
   }
@@ -34,7 +34,7 @@ export class ContentModel {
     
     const query = `
       INSERT INTO contenidos_calendarizados 
-      (id, campana_id, fecha, titulo, descripcion, tipo, url_referencia, archivo_local, estado)
+      (id, campaña_id, fecha, titulo, descripcion, tipo, url_referencia, archivo_local, estado)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `
     
@@ -123,7 +123,7 @@ export class ContentModel {
     const values: any[] = []
 
     if (filters?.campanaId) {
-      query += ' AND campana_id = ?'
+      query += ' AND campaña_id = ?'
       values.push(filters.campanaId)
     }
 
@@ -166,7 +166,7 @@ export class ContentModel {
     const values: any[] = []
 
     if (filters?.campanaId) {
-      query += ' AND campana_id = ?'
+      query += ' AND campaña_id = ?'
       values.push(filters.campanaId)
     }
 
