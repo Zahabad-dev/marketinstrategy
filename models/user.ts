@@ -2,7 +2,7 @@ import { User, UserCreateInput, UserUpdateInput, UserRole } from '@/types'
 import { db } from '@/lib/db'
 import { hashPassword } from '@/lib/auth'
 import { v4 as uuidv4 } from 'uuid'
-import { RowDataPacket } from 'mysql2'
+
 
 export class UserModel {
   /**
@@ -86,7 +86,7 @@ export class UserModel {
   static async delete(id: string): Promise<boolean> {
     const query = 'DELETE FROM users WHERE id = ?'
     const [result] = await db.execute(query, [id])
-    return (result as any).affectedRows > 0
+    return (result as any).affectedRows > 0 || (result as any).rowCount > 0
   }
 
   /**
@@ -123,7 +123,7 @@ export class UserModel {
    * Count users
    */
   static async count(filters?: { rol?: UserRole; search?: string }): Promise<number> {
-    let query = 'SELECT COUNT(*) as total FROM users WHERE 1=1'
+    let query = 'SELECT COUNT(*) as count FROM users WHERE 1=1'
     const values: any[] = []
 
     if (filters?.rol) {
@@ -137,7 +137,7 @@ export class UserModel {
       values.push(searchTerm, searchTerm)
     }
 
-    const [rows] = await db.execute(query, values) as RowDataPacket[][]
-    return rows[0].total
+    const [rows] = await db.execute(query, values)
+    return parseInt(rows[0].count ?? rows[0].total ?? 0)
   }
 }

@@ -1,60 +1,65 @@
-import mysql from 'mysql2/promise'
+import { Pool } from 'pg'
 
-let pool: mysql.Pool | null = null
+let pool: Pool | null = null
 
 /**
- * Get or create MySQL connection pool
+ * Get or create PostgreSQL connection pool
  */
-export function getPool(): mysql.Pool {
+export function getPool(): Pool {
   if (!pool) {
-    pool = mysql.createPool({
-      uri: process.env.DATABASE_URL,
-      waitForConnections: true,
-      connectionLimit: parseInt(process.env.DB_POOL_MAX || '10'),
-      queueLimit: 0,
-      enableKeepAlive: true,
-      keepAliveInitialDelay: 0,
+    pool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+      max: parseInt(process.env.DB_POOL_MAX || '10'),
+      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
     })
   }
-  
   return pool
 }
 
 /**
- * Database connection object
+ * Convert MySQL-style ? placeholders to PostgreSQL $1, $2, ...
+ */
+function toPostgresQuery(query: string): string {
+  let i = 0
+  return query.replace(/\?/g, () => `$${++i}`)
+}
+
+const SELECT_RE = /^\s*(SELECT|WITH|SHOW|EXPLAIN)/i
+
+/**
+ * Database connection object (mysql2-compatible interface)
  */
 export const db = {
-  async execute(query: string, params?: any[]) {
-    const pool = getPool()
-    return await pool.execute(query, params)
+  async execute(query: string, params?: any[]): Promise<[any[], any]> {
+    const pgPool = getPool()
+    const pgQuery = toPostgresQuery(query)
+    const result = await pgPool.query(pgQuery, params)
+    if (SELECT_RE.test(query)) {
+      return [result.rows, result.fields ?? []]
+    }
+    return [{ affectedRows: result.rowCount ?? 0 } as any, []]
   },
-  
-  async query(query: string, params?: any[]) {
-    const pool = getPool()
-    return await pool.query(query, params)
+
+  async query(query: string, params?: any[]): Promise<[any[], any]> {
+    return this.execute(query, params)
   },
-  
-  async getConnection() {
-    const pool = getPool()
-    return await pool.getConnection()
-  },
-  
-  async transaction(callback: (connection: mysql.PoolConnection) => Promise<any>) {
-    const connection = await this.getConnection()
-    
+
+  async transaction(callback: (client: any) => Promise<any>) {
+    const pgPool = getPool()
+    const client = await pgPool.connect()
     try {
-      await connection.beginTransaction()
-      const result = await callback(connection)
-      await connection.commit()
+      await client.query('BEGIN')
+      const result = await callback(client)
+      await client.query('COMMIT')
       return result
     } catch (error) {
-      await connection.rollback()
+      await client.query('ROLLBACK')
       throw error
     } finally {
-      connection.release()
+      client.release()
     }
   },
-  
+
   async close() {
     if (pool) {
       await pool.end()

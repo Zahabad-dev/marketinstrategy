@@ -36,7 +36,7 @@ export default async function handler(
       
       // Only admins and editors can modify content
       if (!isEditorOrAdmin(payload.rol)) {
-        return ApiResponse.forbidden(res)
+        return ApiResponse.forbidden(res, `Acceso denegado (rol: ${payload.rol})`)
       }
       
       const data = validate(updateContentSchema, req.body)

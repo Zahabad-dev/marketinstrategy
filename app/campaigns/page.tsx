@@ -87,13 +87,13 @@ export default function CampaignsPage() {
   return (
     <AppLayout>
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Campañas</h1>
-            <p className="text-gray-600 mt-1">Gestiona las campañas de marketing</p>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Campañas</h1>
+            <p className="text-sm sm:text-base text-gray-600 mt-1">Gestiona las campañas de marketing</p>
           </div>
           {canManage() && (
-            <button onClick={openCreate} className="btn btn-primary flex items-center gap-2">
+            <button onClick={openCreate} className="btn btn-primary flex items-center gap-2 self-start sm:self-auto">
               <Plus className="w-4 h-4" /> Nueva Campaña
             </button>
           )}
@@ -115,7 +115,9 @@ export default function CampaignsPage() {
               {canManage() && <button onClick={openCreate} className="btn btn-primary">Crear primera campaña</button>}
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <>
+            {/* Desktop table */}
+            <div className="hidden md:block overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
@@ -154,6 +156,35 @@ export default function CampaignsPage() {
                 </tbody>
               </table>
             </div>
+            {/* Mobile cards */}
+            <div className="md:hidden divide-y divide-gray-100">
+              {campaigns.map((c: any) => (
+                <div key={c.id} className="py-4 px-1 flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-gray-900 text-sm mb-1 line-clamp-2">{c.objetivo_general || c.objetivoGeneral || '-'}</p>
+                    <div className="flex flex-wrap items-center gap-2 mt-1">
+                      <span className="text-xs text-gray-500">
+                        {c.mes && (c.anio || c.año) ? `${MONTH_NAMES[(c.mes||1)-1]} ${c.anio || c.año}` : '-'}
+                      </span>
+                      <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${STATUS_COLORS[c.estado] || 'bg-gray-100 text-gray-600'}`}>
+                        {STATUS_LABELS[c.estado] || c.estado || '-'}
+                      </span>
+                    </div>
+                  </div>
+                  {canManage() && (
+                    <div className="flex gap-1 shrink-0">
+                      <button onClick={() => openEdit(c)} className="p-2 text-blue-600 hover:bg-blue-50 rounded">
+                        <Edit className="w-4 h-4" />
+                      </button>
+                      <button onClick={() => handleDelete(c.id)} className="p-2 text-red-600 hover:bg-red-50 rounded">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+            </>
           )}
         </div>
       </div>

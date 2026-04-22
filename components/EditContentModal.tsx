@@ -24,6 +24,12 @@ export function EditContentModal({
   const [titulo, setTitulo] = useState('')
   const [descripcion, setDescripcion] = useState('')
   const [estado, setEstado] = useState<ContentStatus>(ContentStatus.PENDIENTE)
+  const [copy, setCopy] = useState('')
+  const [copyV2, setCopyV2] = useState('')
+  const [showCopyV2, setShowCopyV2] = useState(false)
+  const [guion, setGuion] = useState('')
+  const [guionV2, setGuionV2] = useState('')
+  const [showGuionV2, setShowGuionV2] = useState(false)
   
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -33,6 +39,17 @@ export function EditContentModal({
       setTitulo(content.titulo)
       setDescripcion(content.descripcion || '')
       setEstado(content.estado)
+      const rawContent = content as any
+      const copyVal = rawContent.copy || ''
+      const copyV2Val = rawContent.copy_v2 || rawContent.copyV2 || ''
+      const guionVal = rawContent.guion || ''
+      const guionV2Val = rawContent.guion_v2 || rawContent.guionV2 || ''
+      setCopy(copyVal)
+      setCopyV2(copyV2Val)
+      setShowCopyV2(!!copyV2Val)
+      setGuion(guionVal)
+      setGuionV2(guionV2Val)
+      setShowGuionV2(!!guionV2Val)
     }
   }, [content])
 
@@ -48,10 +65,14 @@ export function EditContentModal({
       
       const updateData: any = {}
       
-      // Editors can edit title and description
+      // Editors can edit title, description, copy and guion
       if (isEditor() || isAdmin()) {
         if (titulo !== content.titulo) updateData.titulo = titulo
         if (descripcion !== content.descripcion) updateData.descripcion = descripcion || undefined
+        updateData.copy = copy || null
+        updateData.copyV2 = copyV2 || null
+        updateData.guion = guion || null
+        updateData.guionV2 = guionV2 || null
       }
       
       // Only admins can change status
@@ -208,6 +229,106 @@ export function EditContentModal({
             rows={3}
             disabled={!isEditor() && !isAdmin()}
           />
+        </div>
+
+        {/* Copy */}
+        <div>
+          <div className="flex items-center justify-between mb-1">
+            <label className="block text-sm font-medium text-gray-700">
+              Copy <span className="text-xs text-gray-400 font-normal">(texto de la publicación)</span>
+            </label>
+            {!showCopyV2 && (isEditor() || isAdmin()) && (
+              <button
+                type="button"
+                onClick={() => setShowCopyV2(true)}
+                className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+              >
+                + Agregar versión 2
+              </button>
+            )}
+          </div>
+          <textarea
+            value={copy}
+            onChange={(e) => setCopy(e.target.value)}
+            placeholder="Escribe el texto que acompañará la publicación..."
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+            rows={4}
+            disabled={!isEditor() && !isAdmin()}
+          />
+          {showCopyV2 && (
+            <div className="mt-2">
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-xs font-medium text-gray-600">Copy — Versión 2</label>
+                {(isEditor() || isAdmin()) && (
+                  <button
+                    type="button"
+                    onClick={() => { setShowCopyV2(false); setCopyV2('') }}
+                    className="text-xs text-red-500 hover:text-red-700"
+                  >
+                    Quitar
+                  </button>
+                )}
+              </div>
+              <textarea
+                value={copyV2}
+                onChange={(e) => setCopyV2(e.target.value)}
+                placeholder="Versión alternativa del copy..."
+                className="w-full px-3 py-2 border border-blue-200 bg-blue-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+                rows={4}
+                disabled={!isEditor() && !isAdmin()}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Guión */}
+        <div>
+          <div className="flex items-center justify-between mb-1">
+            <label className="block text-sm font-medium text-gray-700">
+              Guión <span className="text-xs text-gray-400 font-normal">(guion del contenido)</span>
+            </label>
+            {!showGuionV2 && (isEditor() || isAdmin()) && (
+              <button
+                type="button"
+                onClick={() => setShowGuionV2(true)}
+                className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+              >
+                + Agregar versión 2
+              </button>
+            )}
+          </div>
+          <textarea
+            value={guion}
+            onChange={(e) => setGuion(e.target.value)}
+            placeholder="Escribe el guión o instrucciones del contenido..."
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+            rows={4}
+            disabled={!isEditor() && !isAdmin()}
+          />
+          {showGuionV2 && (
+            <div className="mt-2">
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-xs font-medium text-gray-600">Guión — Versión 2</label>
+                {(isEditor() || isAdmin()) && (
+                  <button
+                    type="button"
+                    onClick={() => { setShowGuionV2(false); setGuionV2('') }}
+                    className="text-xs text-red-500 hover:text-red-700"
+                  >
+                    Quitar
+                  </button>
+                )}
+              </div>
+              <textarea
+                value={guionV2}
+                onChange={(e) => setGuionV2(e.target.value)}
+                placeholder="Versión alternativa del guión..."
+                className="w-full px-3 py-2 border border-purple-200 bg-purple-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 disabled:bg-gray-100"
+                rows={4}
+                disabled={!isEditor() && !isAdmin()}
+              />
+            </div>
+          )}
         </div>
 
         {/* Status - Admin Only */}

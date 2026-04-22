@@ -1,6 +1,5 @@
 /**
- * Database Schema Definitions
- * MySQL/PostgreSQL compatible schemas
+ * Database Schema Definitions — PostgreSQL
  */
 
 export const UserSchema = `
@@ -9,12 +8,12 @@ export const UserSchema = `
     nombre VARCHAR(200) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
-    rol ENUM('ADMIN', 'EDITOR', 'CLIENT') DEFAULT 'CLIENT',
+    rol VARCHAR(10) NOT NULL DEFAULT 'CLIENT' CHECK (rol IN ('ADMIN', 'EDITOR', 'CLIENT')),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_email (email),
-    INDEX idx_rol (rol)
-  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  );
+  CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+  CREATE INDEX IF NOT EXISTS idx_users_rol ON users(rol);
 `
 
 export const ClientSchema = `
@@ -22,50 +21,47 @@ export const ClientSchema = `
     id VARCHAR(36) PRIMARY KEY,
     nombre_empresa VARCHAR(200) NOT NULL,
     contacto VARCHAR(200) NOT NULL,
-    usuario_id VARCHAR(36) NOT NULL,
+    usuario_id VARCHAR(36) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (usuario_id) REFERENCES users(id) ON DELETE CASCADE,
-    INDEX idx_usuario_id (usuario_id)
-  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  );
+  CREATE INDEX IF NOT EXISTS idx_clients_usuario_id ON clients(usuario_id);
 `
 
 export const CampaignSchema = `
   CREATE TABLE IF NOT EXISTS campaigns (
     id VARCHAR(36) PRIMARY KEY,
-    cliente_id VARCHAR(36) NOT NULL,
+    cliente_id VARCHAR(36) NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
     mes INT NOT NULL CHECK (mes BETWEEN 1 AND 12),
     anio INT NOT NULL,
     objetivo_general TEXT NOT NULL,
-    estado ENUM('PLANIFICADA', 'EN_PROGRESO', 'COMPLETADA', 'CANCELADA') DEFAULT 'PLANIFICADA',
+    estado VARCHAR(20) NOT NULL DEFAULT 'PLANIFICADA' CHECK (estado IN ('PLANIFICADA', 'EN_PROGRESO', 'COMPLETADA', 'CANCELADA')),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (cliente_id) REFERENCES clients(id) ON DELETE CASCADE,
-    INDEX idx_cliente_id (cliente_id),
-    INDEX idx_mes_anio (mes, anio),
-    INDEX idx_estado (estado)
-  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  );
+  CREATE INDEX IF NOT EXISTS idx_campaigns_cliente_id ON campaigns(cliente_id);
+  CREATE INDEX IF NOT EXISTS idx_campaigns_mes_anio ON campaigns(mes, anio);
+  CREATE INDEX IF NOT EXISTS idx_campaigns_estado ON campaigns(estado);
 `
 
 export const ContentSchema = `
   CREATE TABLE IF NOT EXISTS contenidos_calendarizados (
     id VARCHAR(36) PRIMARY KEY,
-    campana_id VARCHAR(36) NOT NULL,
+    campana_id VARCHAR(36) NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
     fecha DATE NOT NULL,
     titulo VARCHAR(300) NOT NULL,
     descripcion TEXT,
-    tipo ENUM('VIDEO_LINK', 'VIDEO_FILE', 'IMAGEN', 'PDF') NOT NULL,
+    tipo VARCHAR(20) NOT NULL CHECK (tipo IN ('VIDEO_LINK', 'VIDEO_FILE', 'IMAGEN', 'PDF')),
     url_referencia VARCHAR(500),
     archivo_local VARCHAR(500),
-    estado ENUM('PENDIENTE', 'EN_REVISION', 'APROBADO', 'PUBLICADO', 'RECHAZADO') DEFAULT 'PENDIENTE',
+    estado VARCHAR(20) NOT NULL DEFAULT 'PENDIENTE' CHECK (estado IN ('PENDIENTE', 'EN_REVISION', 'APROBADO', 'PUBLICADO', 'RECHAZADO')),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (campaña_id) REFERENCES campaigns(id) ON DELETE CASCADE,
-    INDEX idx_campaña_id (campaña_id),
-    INDEX idx_fecha (fecha),
-    INDEX idx_estado (estado),
-    INDEX idx_tipo (tipo)
-  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  );
+  CREATE INDEX IF NOT EXISTS idx_contenidos_campana_id ON contenidos_calendarizados(campana_id);
+  CREATE INDEX IF NOT EXISTS idx_contenidos_fecha ON contenidos_calendarizados(fecha);
+  CREATE INDEX IF NOT EXISTS idx_contenidos_estado ON contenidos_calendarizados(estado);
+  CREATE INDEX IF NOT EXISTS idx_contenidos_tipo ON contenidos_calendarizados(tipo);
 `
 
 export const AllSchemas = [

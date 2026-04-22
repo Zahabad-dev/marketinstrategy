@@ -49,12 +49,21 @@ export default function PortalPage() {
       setCampaigns(cams)
       const contentArrays = await Promise.all(
         cams.map((c: any) =>
-          fetch(`/api/contents?campanaId=${c.id}`, { headers: { Authorization: `Bearer ${token}` } })
+          fetch(`/api/contents?campanaId=${c.id}&perPage=500`, { headers: { Authorization: `Bearer ${token}` } })
             .then(r => r.json()).then(d => (d.data?.data || []).map((item: any) => ({ ...item, _campanaId: c.id })))
             .catch(() => [])
         )
       )
-      setAllContents(contentArrays.flat())
+      const allItems = contentArrays.flat()
+      setAllContents(allItems)
+      // Auto-navigate to the month with the nearest upcoming content
+      const now = new Date()
+      const future = allItems.filter((c: any) => c.fecha && new Date(c.fecha) >= new Date(now.getFullYear(), now.getMonth(), 1))
+      if (future.length > 0) {
+        future.sort((a: any, b: any) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime())
+        const nearest = new Date(future[0].fecha)
+        setCurrentDate(new Date(nearest.getFullYear(), nearest.getMonth(), 1))
+      }
     } catch {} finally { setLoading(false) }
   }
 
@@ -80,7 +89,7 @@ export default function PortalPage() {
     const map: Record<number, any[]> = {}
     filteredContents.forEach(c => {
       if (!c.fecha) return
-      const d = new Date(c.fecha)
+      const d = new Date(c.fecha.split('T')[0] + 'T12:00:00')
       if (d.getFullYear() !== year || d.getMonth() !== month) return
       const day = d.getDate()
       if (!map[day]) map[day] = []
@@ -95,8 +104,8 @@ export default function PortalPage() {
     <AppLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Mi Calendario de Contenido</h1>
-          <p className="text-gray-600 mt-1">Revisa el plan de contenido del mes</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Mi Calendario de Contenido</h1>
+          <p className="text-sm sm:text-base text-gray-600 mt-1">Revisa el plan de contenido del mes</p>
         </div>
 
         {loading ? (
@@ -158,7 +167,7 @@ export default function PortalPage() {
                   const isSelected = validDay && selectedDay === dayNum
                   return (
                     <div key={idx} onClick={() => { if (validDay) setSelectedDay(prev => prev === dayNum ? null : dayNum) }}
-                      className={`min-h-[90px] p-2 transition-colors ${!validDay ? 'bg-gray-50' : 'cursor-pointer'} ${isSelected ? 'bg-blue-50' : validDay ? 'hover:bg-gray-50' : ''}`}>
+                      className={`min-h-[70px] sm:min-h-[90px] p-1 sm:p-2 transition-colors ${!validDay ? 'bg-gray-50' : 'cursor-pointer'} ${isSelected ? 'bg-blue-50' : validDay ? 'hover:bg-gray-50' : ''}`}>
                       {validDay && (
                         <>
                           <div className={`text-sm font-medium mb-1.5 w-7 h-7 flex items-center justify-center rounded-full ${isToday ? 'bg-blue-600 text-white' : isSelected ? 'bg-blue-100 text-blue-700' : 'text-gray-700'}`}>
@@ -228,6 +237,32 @@ export default function PortalPage() {
                                 <ExternalLink className="w-3 h-3" /> Ver archivo
                               </a>
                             )}
+                            {/* Copy */}
+                            {(c.copy) && (
+                              <div className="mt-3 pt-3 border-t border-gray-100">
+                                <p className="text-xs font-semibold text-gray-700 mb-1">Copy</p>
+                                <p className="text-xs text-gray-600 whitespace-pre-wrap">{c.copy}</p>
+                                {(c.copy_v2 || c.copyV2) && (
+                                  <div className="mt-2">
+                                    <p className="text-xs font-semibold text-blue-700 mb-1">Copy — Versión 2</p>
+                                    <p className="text-xs text-gray-600 whitespace-pre-wrap">{c.copy_v2 || c.copyV2}</p>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                            {/* Guión */}
+                            {(c.guion) && (
+                              <div className="mt-3 pt-3 border-t border-gray-100">
+                                <p className="text-xs font-semibold text-gray-700 mb-1">Guión</p>
+                                <p className="text-xs text-gray-600 whitespace-pre-wrap">{c.guion}</p>
+                                {(c.guion_v2 || c.guionV2) && (
+                                  <div className="mt-2">
+                                    <p className="text-xs font-semibold text-purple-700 mb-1">Guión — Versión 2</p>
+                                    <p className="text-xs text-gray-600 whitespace-pre-wrap">{c.guion_v2 || c.guionV2}</p>
+                                  </div>
+                                )}
+                              </div>
+                            )}
                           </div>
                         </div>
                       )
@@ -243,7 +278,7 @@ export default function PortalPage() {
                 const count = filteredContents.filter(c => {
                   if (c.estado !== status) return false
                   if (!c.fecha) return false
-                  const d = new Date(c.fecha)
+                  const d = new Date(c.fecha.split('T')[0] + 'T12:00:00')
                   return d.getFullYear() === year && d.getMonth() === month
                 }).length
                 return (

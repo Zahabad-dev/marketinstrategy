@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Plus, Search, Edit, Trash2, X, User, Building2, KeyRound, CheckCircle2 } from 'lucide-react'
+import { Plus, Search, Edit, Trash2, X, User, Building2, KeyRound, CheckCircle2, Mail } from 'lucide-react'
 import AppLayout from '@/components/AppLayout'
 import { useAuth } from '@/contexts/AuthContext'
 
@@ -100,13 +100,13 @@ export default function ClientsPage() {
   return (
     <AppLayout>
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Clientes</h1>
-            <p className="text-gray-600 mt-1">Gestiona los clientes de la agencia</p>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Clientes</h1>
+            <p className="text-sm sm:text-base text-gray-600 mt-1">Gestiona los clientes de la agencia</p>
           </div>
           {canManage() && (
-            <button onClick={openCreate} className="btn btn-primary flex items-center gap-2">
+            <button onClick={openCreate} className="btn btn-primary flex items-center gap-2 self-start sm:self-auto">
               <Plus className="w-4 h-4" /> Nuevo Cliente
             </button>
           )}
@@ -146,7 +146,9 @@ export default function ClientsPage() {
               {canManage() && <button onClick={openCreate} className="btn btn-primary">Crear primer cliente</button>}
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <>
+            {/* Desktop table */}
+            <div className="hidden md:block overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
@@ -169,9 +171,17 @@ export default function ClientsPage() {
                       <td className="px-6 py-4 text-gray-600">{c.contacto || '-'}</td>
                       <td className="px-6 py-4">
                         {c.usuario_id ? (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-medium">
-                            <User className="w-3 h-3" /> Acceso activo
-                          </span>
+                          <div className="space-y-1">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-medium">
+                              <User className="w-3 h-3" /> Acceso activo
+                            </span>
+                            {c.usuario_email && (
+                              <div className="flex items-center gap-1 text-xs text-gray-500">
+                                <Mail className="w-3 h-3" />
+                                <span>{c.usuario_email}</span>
+                              </div>
+                            )}
+                          </div>
                         ) : (
                           <span className="px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full text-xs">Sin acceso</span>
                         )}
@@ -190,6 +200,47 @@ export default function ClientsPage() {
                 </tbody>
               </table>
             </div>
+            {/* Mobile cards */}
+            <div className="md:hidden divide-y divide-gray-100">
+              {clients.map((c: any) => (
+                <div key={c.id} className="py-4 px-1 flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Building2 className="w-4 h-4 text-gray-400 shrink-0" />
+                      <span className="font-medium text-gray-900 truncate">{c.nombre_empresa}</span>
+                    </div>
+                    {c.contacto && <p className="text-sm text-gray-500 mb-1">{c.contacto}</p>}
+                    <div className="flex flex-wrap items-center gap-2 mt-1">
+                      {c.usuario_id ? (
+                        <div className="space-y-1">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-medium">
+                            <User className="w-3 h-3" /> Acceso activo
+                          </span>
+                          {c.usuario_email && (
+                            <div className="flex items-center gap-1 text-xs text-gray-500">
+                              <Mail className="w-3 h-3" />
+                              <span className="truncate max-w-[160px]">{c.usuario_email}</span>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full text-xs">Sin acceso</span>
+                      )}
+                      {c.created_at && (
+                        <span className="text-xs text-gray-400">{new Date(c.created_at).toLocaleDateString('es-MX')}</span>
+                      )}
+                    </div>
+                  </div>
+                  {canManage() && (
+                    <div className="flex gap-1 shrink-0">
+                      <button onClick={() => openEdit(c)} className="p-2 text-blue-600 hover:bg-blue-50 rounded"><Edit className="w-4 h-4" /></button>
+                      <button onClick={() => handleDelete(c.id)} className="p-2 text-red-600 hover:bg-red-50 rounded"><Trash2 className="w-4 h-4" /></button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+            </>
           )}
         </div>
       </div>

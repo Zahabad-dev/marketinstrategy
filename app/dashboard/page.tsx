@@ -81,30 +81,30 @@ export default function DashboardPage() {
 
   return (
     <AppLayout>
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-600 mt-1">Resumen general de tu agencia de marketing</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Dashboard</h1>
+          <p className="text-sm sm:text-base text-gray-600 mt-1">Resumen general de tu agencia de marketing</p>
         </div>
 
         {loading ? (
           <div className="text-center py-12 text-gray-500">Cargando estadísticas...</div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
             {statCards.map((stat) => (
-              <div key={stat.name} className="card">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-600">{stat.name}</p>
-                    <p className="text-2xl font-bold text-gray-900 mt-2">
+              <div key={stat.name} className="card !p-4 sm:!p-6">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">{stat.name}</p>
+                    <p className="text-xl sm:text-2xl font-bold text-gray-900 mt-1 sm:mt-2">
                       {stat.value}
                       {'total' in stat && (
-                        <span className="text-sm text-gray-500 ml-2">/ {stat.total}</span>
+                        <span className="text-xs sm:text-sm text-gray-500 ml-1">/ {stat.total}</span>
                       )}
                     </p>
                   </div>
-                  <div className={`${stat.bg} p-3 rounded-lg`}>
-                    <stat.icon className={`w-6 h-6 ${stat.color}`} />
+                  <div className={`${stat.bg} p-2 sm:p-3 rounded-lg shrink-0`}>
+                    <stat.icon className={`w-5 h-5 sm:w-6 sm:h-6 ${stat.color}`} />
                   </div>
                 </div>
               </div>

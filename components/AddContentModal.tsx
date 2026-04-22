@@ -37,6 +37,12 @@ export function AddContentModal({
   const [urlReferencia, setUrlReferencia] = useState('')
   const [file, setFile] = useState<File | null>(null)
   const [linkPreview, setLinkPreview] = useState<LinkMetadata | null>(null)
+  const [copy, setCopy] = useState('')
+  const [copyV2, setCopyV2] = useState('')
+  const [showCopyV2, setShowCopyV2] = useState(false)
+  const [guion, setGuion] = useState('')
+  const [guionV2, setGuionV2] = useState('')
+  const [showGuionV2, setShowGuionV2] = useState(false)
   
   const [loading, setLoading] = useState(false)
   const [uploading, setUploading] = useState(false)
@@ -161,14 +167,18 @@ export function AddContentModal({
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          campañaId,
+          campanaId: campañaId,
           fecha,
           titulo,
           descripcion: descripcion || undefined,
           tipo,
           urlReferencia: tipo === ContentType.VIDEO_LINK ? urlReferencia : undefined,
           archivoLocal,
-          estado: ContentStatus.PENDIENTE
+          estado: ContentStatus.PENDIENTE,
+          copy: copy || undefined,
+          copyV2: copyV2 || undefined,
+          guion: guion || undefined,
+          guionV2: guionV2 || undefined,
         })
       })
 
@@ -198,6 +208,12 @@ export function AddContentModal({
     setUrlReferencia('')
     setFile(null)
     setLinkPreview(null)
+    setCopy('')
+    setCopyV2('')
+    setShowCopyV2(false)
+    setGuion('')
+    setGuionV2('')
+    setShowGuionV2(false)
     setError(null)
   }
 
@@ -308,6 +324,98 @@ export function AddContentModal({
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             rows={3}
           />
+        </div>
+
+        {/* Copy */}
+        <div>
+          <div className="flex items-center justify-between mb-1">
+            <label className="block text-sm font-medium text-gray-700">
+              Copy <span className="text-xs text-gray-400 font-normal">(texto de la publicación)</span>
+            </label>
+            {!showCopyV2 && (
+              <button
+                type="button"
+                onClick={() => setShowCopyV2(true)}
+                className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+              >
+                + Agregar versión 2
+              </button>
+            )}
+          </div>
+          <textarea
+            value={copy}
+            onChange={(e) => setCopy(e.target.value)}
+            placeholder="Escribe el texto que acompañará la publicación..."
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            rows={4}
+          />
+          {showCopyV2 && (
+            <div className="mt-2">
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-xs font-medium text-gray-600">Copy — Versión 2</label>
+                <button
+                  type="button"
+                  onClick={() => { setShowCopyV2(false); setCopyV2('') }}
+                  className="text-xs text-red-500 hover:text-red-700"
+                >
+                  Quitar
+                </button>
+              </div>
+              <textarea
+                value={copyV2}
+                onChange={(e) => setCopyV2(e.target.value)}
+                placeholder="Versión alternativa del copy..."
+                className="w-full px-3 py-2 border border-blue-200 bg-blue-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                rows={4}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Guión */}
+        <div>
+          <div className="flex items-center justify-between mb-1">
+            <label className="block text-sm font-medium text-gray-700">
+              Guión <span className="text-xs text-gray-400 font-normal">(guion del contenido)</span>
+            </label>
+            {!showGuionV2 && (
+              <button
+                type="button"
+                onClick={() => setShowGuionV2(true)}
+                className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+              >
+                + Agregar versión 2
+              </button>
+            )}
+          </div>
+          <textarea
+            value={guion}
+            onChange={(e) => setGuion(e.target.value)}
+            placeholder="Escribe el guión o instrucciones del contenido..."
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            rows={4}
+          />
+          {showGuionV2 && (
+            <div className="mt-2">
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-xs font-medium text-gray-600">Guión — Versión 2</label>
+                <button
+                  type="button"
+                  onClick={() => { setShowGuionV2(false); setGuionV2('') }}
+                  className="text-xs text-red-500 hover:text-red-700"
+                >
+                  Quitar
+                </button>
+              </div>
+              <textarea
+                value={guionV2}
+                onChange={(e) => setGuionV2(e.target.value)}
+                placeholder="Versión alternativa del guión..."
+                className="w-full px-3 py-2 border border-purple-200 bg-purple-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                rows={4}
+              />
+            </div>
+          )}
         </div>
 
         {/* Content Type */}

@@ -86,6 +86,10 @@ export interface ContenidoCalendarizado {
   urlReferencia?: string
   archivoLocal?: string
   estado: ContentStatus
+  copy?: string | null
+  copyV2?: string | null
+  guion?: string | null
+  guionV2?: string | null
   createdAt: Date
   updatedAt: Date
 }
@@ -94,10 +98,14 @@ export type ContenidoCalendarizadoCreateInput = Omit<ContenidoCalendarizado, 'id
   estado?: ContentStatus
   fecha: Date | string
 }
-export type ContenidoCalendarizadoUpdateInput = Partial<Omit<ContenidoCalendarizado, 'id' | 'createdAt' | 'campanaId' |'fecha' | 'urlReferencia' | 'archivoLocal'>> & {
+export type ContenidoCalendarizadoUpdateInput = Partial<Omit<ContenidoCalendarizado, 'id' | 'createdAt' | 'campanaId' |'fecha' | 'urlReferencia' | 'archivoLocal' | 'copy' | 'copyV2' | 'guion' | 'guionV2'>> & {
   fecha?: Date | string
   urlReferencia?: string | null
   archivoLocal?: string | null
+  copy?: string | null
+  copyV2?: string | null
+  guion?: string | null
+  guionV2?: string | null
 }
 
 // API Response Types

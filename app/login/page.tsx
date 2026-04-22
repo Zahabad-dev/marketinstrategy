@@ -28,7 +28,7 @@ export default function LoginPage() {
     <div className="min-h-screen bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">MarketInStrategy</h1>
+          <img src="/brand/blacksheep-transparent.png?v=2" alt="BlackSheep" className="h-20 w-auto mx-auto mb-4" />
           <p className="text-gray-600">Sistema de Gestión de Campañas</p>
         </div>
 
@@ -77,12 +77,6 @@ export default function LoginPage() {
             {loading ? 'Ingresando...' : 'Iniciar Sesión'}
           </button>
         </form>
-
-        <div className="mt-6 text-center text-sm text-gray-500 bg-gray-50 rounded-lg p-3">
-          <p className="font-medium text-gray-600 mb-1">Credenciales de acceso:</p>
-          <p>Email: <span className="font-mono text-primary-600">admin@marketinstrategy.com</span></p>
-          <p>Contraseña: <span className="font-mono text-primary-600">admin123</span></p>
-        </div>
       </div>
     </div>
   )

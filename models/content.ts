@@ -1,7 +1,7 @@
 ﻿import { ContenidoCalendarizado, ContenidoCalendarizadoCreateInput, ContenidoCalendarizadoUpdateInput, ContentType, ContentStatus } from '@/types'
 import { db } from '@/lib/db'
 import { v4 as uuidv4 } from 'uuid'
-import { RowDataPacket } from 'mysql2'
+
 
 export class ContentModel {
   /**
@@ -18,7 +18,7 @@ export class ContentModel {
    * Find contents by campaign ID
    */
   static async findByCampanaId(campanaId: string): Promise<ContenidoCalendarizado[]> {
-    const query = 'SELECT * FROM contenidos_calendarizados WHERE campaña_id = ? ORDER BY fecha ASC'
+    const query = 'SELECT * FROM contenidos_calendarizados WHERE campana_id = ? ORDER BY fecha ASC'
     const [rows] = await db.execute(query, [campanaId])
     return rows as ContenidoCalendarizado[]
   }
@@ -34,8 +34,8 @@ export class ContentModel {
     
     const query = `
       INSERT INTO contenidos_calendarizados 
-      (id, campaña_id, fecha, titulo, descripcion, tipo, url_referencia, archivo_local, estado)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      (id, campana_id, fecha, titulo, descripcion, tipo, url_referencia, archivo_local, estado, copy, copy_v2, guion, guion_v2)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `
     
     await db.execute(query, [
@@ -48,6 +48,10 @@ export class ContentModel {
       data.urlReferencia || null,
       data.archivoLocal || null,
       data.estado || ContentStatus.PENDIENTE,
+      data.copy || null,
+      data.copyV2 || null,
+      data.guion || null,
+      data.guionV2 || null,
     ])
 
     return this.findById(id) as Promise<ContenidoCalendarizado>
@@ -89,6 +93,22 @@ export class ContentModel {
       updates.push('estado = ?')
       values.push(data.estado)
     }
+    if (data.copy !== undefined) {
+      updates.push('copy = ?')
+      values.push(data.copy)
+    }
+    if (data.copyV2 !== undefined) {
+      updates.push('copy_v2 = ?')
+      values.push(data.copyV2)
+    }
+    if (data.guion !== undefined) {
+      updates.push('guion = ?')
+      values.push(data.guion)
+    }
+    if (data.guionV2 !== undefined) {
+      updates.push('guion_v2 = ?')
+      values.push(data.guionV2)
+    }
 
     if (updates.length === 0) {
       return this.findById(id)
@@ -109,7 +129,7 @@ export class ContentModel {
   static async delete(id: string): Promise<boolean> {
     const query = 'DELETE FROM contenidos_calendarizados WHERE id = ?'
     const [result] = await db.execute(query, [id])
-    return (result as any).affectedRows > 0
+    return (result as any).affectedRows > 0 || (result as any).rowCount > 0
   }
 
   /**
@@ -123,7 +143,7 @@ export class ContentModel {
     const values: any[] = []
 
     if (filters?.campanaId) {
-      query += ' AND campaña_id = ?'
+      query += ' AND campana_id = ?'
       values.push(filters.campanaId)
     }
 
@@ -162,11 +182,11 @@ export class ContentModel {
    * Count contents
    */
   static async count(filters?: { campanaId?: string; tipo?: ContentType; estado?: ContentStatus }): Promise<number> {
-    let query = 'SELECT COUNT(*) as total FROM contenidos_calendarizados WHERE 1=1'
+    let query = 'SELECT COUNT(*) as count FROM contenidos_calendarizados WHERE 1=1'
     const values: any[] = []
 
     if (filters?.campanaId) {
-      query += ' AND campaña_id = ?'
+      query += ' AND campana_id = ?'
       values.push(filters.campanaId)
     }
 
@@ -180,8 +200,8 @@ export class ContentModel {
       values.push(filters.estado)
     }
 
-    const [rows] = await db.execute(query, values) as RowDataPacket[][]
-    return rows[0].total
+    const [rows] = await db.execute(query, values)
+    return parseInt(rows[0].count ?? rows[0].total ?? 0)
   }
 
   /**

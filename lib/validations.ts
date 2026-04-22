@@ -65,6 +65,10 @@ export const createContentSchema = z.object({
   urlReferencia: z.string().optional().or(z.literal('')),
   archivoLocal: z.string().optional(),
   estado: z.nativeEnum(ContentStatus).optional(),
+  copy: z.string().optional().nullable(),
+  copyV2: z.string().optional().nullable(),
+  guion: z.string().optional().nullable(),
+  guionV2: z.string().optional().nullable(),
 })
 
 export const updateContentSchema = z.object({
@@ -75,6 +79,10 @@ export const updateContentSchema = z.object({
   urlReferencia: z.string().optional().or(z.literal('')).nullable(),
   archivoLocal: z.string().optional().nullable(),
   estado: z.nativeEnum(ContentStatus).optional(),
+  copy: z.string().optional().nullable(),
+  copyV2: z.string().optional().nullable(),
+  guion: z.string().optional().nullable(),
+  guionV2: z.string().optional().nullable(),
 })
 
 /**
@@ -82,7 +90,7 @@ export const updateContentSchema = z.object({
  */
 export const paginationSchema = z.object({
   page: z.coerce.number().int().positive().optional().default(1),
-  perPage: z.coerce.number().int().positive().max(100).optional().default(20),
+  perPage: z.coerce.number().int().positive().max(1000).optional().default(20),
   sortBy: z.string().optional(),
   sortOrder: z.enum(['asc', 'desc']).optional().default('desc'),
 })

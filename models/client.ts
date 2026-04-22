@@ -1,7 +1,7 @@
 import { Client, ClientCreateInput, ClientUpdateInput } from '@/types'
 import { db } from '@/lib/db'
 import { v4 as uuidv4 } from 'uuid'
-import { RowDataPacket } from 'mysql2'
+
 
 export class ClientModel {
   /**
@@ -79,7 +79,7 @@ export class ClientModel {
   static async delete(id: string): Promise<boolean> {
     const query = 'DELETE FROM clients WHERE id = ?'
     const [result] = await db.execute(query, [id])
-    return (result as any).affectedRows > 0
+    return (result as any).affectedRows > 0 || (result as any).rowCount > 0
   }
 
   /**
@@ -89,7 +89,7 @@ export class ClientModel {
     filters?: { usuarioId?: string; search?: string }, 
     pagination?: { page: number; perPage: number }
   ): Promise<Client[]> {
-    let query = 'SELECT * FROM clients WHERE 1=1'
+    let query = 'SELECT clients.*, users.email as usuario_email FROM clients LEFT JOIN users ON clients.usuario_id = users.id WHERE 1=1'
     const values: any[] = []
 
     if (filters?.usuarioId) {
@@ -118,7 +118,7 @@ export class ClientModel {
    * Count clients
    */
   static async count(filters?: { usuarioId?: string; search?: string }): Promise<number> {
-    let query = 'SELECT COUNT(*) as total FROM clients WHERE 1=1'
+    let query = 'SELECT COUNT(*) as count FROM clients WHERE 1=1'
     const values: any[] = []
 
     if (filters?.usuarioId) {
@@ -132,7 +132,7 @@ export class ClientModel {
       values.push(searchTerm, searchTerm)
     }
 
-    const [rows] = await db.execute(query, values) as RowDataPacket[][]
-    return rows[0].total
+    const [rows] = await db.execute(query, values)
+    return parseInt(rows[0].count ?? rows[0].total ?? 0)
   }
 }

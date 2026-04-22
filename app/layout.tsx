@@ -6,8 +6,12 @@ import { AuthProvider } from '@/contexts/AuthContext'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'SaaS Marketing - Gestión de Campañas',
-  description: 'Sistema de gestión de campañas de marketing para agencias',
+  title: 'BlackSheep - Gestión de Campañas',
+  description: 'BlackSheep | Sistema de gestión de campañas de marketing',
+  icons: {
+    icon: '/brand/blacksheep-transparent.png',
+    apple: '/brand/blacksheep-transparent.png',
+  },
 }
 
 export default function RootLayout({
