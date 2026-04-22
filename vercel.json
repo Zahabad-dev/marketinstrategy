@@ -3,5 +3,16 @@
   "framework": "nextjs",
   "buildCommand": "npm run build",
   "outputDirectory": ".next",
-  "installCommand": "npm install"
+  "installCommand": "npm install",
+  "functions": {
+    "pages/api/calendar/import.ts": {
+      "maxDuration": 30
+    },
+    "pages/api/calendar/export.ts": {
+      "maxDuration": 30
+    },
+    "pages/api/contents/upload.ts": {
+      "maxDuration": 60
+    }
+  }
 }

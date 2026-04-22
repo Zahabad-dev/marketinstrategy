@@ -1,7 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import * as XLSX from 'xlsx'
-import { IncomingForm } from 'formidable'
-import fs from 'fs'
 import { CampaignModel, ContentModel } from '@/models'
 import { extractTokenFromHeader, verifyAccessToken } from '@/lib'
 import { ContentType, ContentStatus, CampaignStatus } from '@/types'
@@ -19,6 +17,58 @@ function normalizeTitle(title: string): string {
   return title.trim().toLowerCase().replace(/\s+/g, ' ')
 }
 
+/**
+ * Parse multipart/form-data manually from the raw request stream.
+ * Returns { fields, fileBuffer } without writing anything to disk — safe for Vercel.
+ */
+async function parseMultipartInMemory(req: NextApiRequest): Promise<{ fields: Record<string, string>; fileBuffer: Buffer | null }> {
+  return new Promise((resolve, reject) => {
+    const contentType = req.headers['content-type'] || ''
+    const boundaryMatch = contentType.match(/boundary=([^\s;]+)/)
+    if (!boundaryMatch) return reject(new Error('No multipart boundary found'))
+    const boundary = '--' + boundaryMatch[1]
+
+    const chunks: Buffer[] = []
+    req.on('data', (chunk: Buffer) => chunks.push(chunk))
+    req.on('error', reject)
+    req.on('end', () => {
+      try {
+        const body = Buffer.concat(chunks)
+        const bodyStr = body.toString('binary')
+        const parts = bodyStr.split(boundary)
+        const fields: Record<string, string> = {}
+        let fileBuffer: Buffer | null = null
+
+        for (const part of parts) {
+          if (!part || part === '--\r\n' || part === '--') continue
+          const headerEnd = part.indexOf('\r\n\r\n')
+          if (headerEnd === -1) continue
+          const headers = part.slice(0, headerEnd)
+          const rawValue = part.slice(headerEnd + 4)
+          const value = rawValue.endsWith('\r\n') ? rawValue.slice(0, -2) : rawValue
+
+          const nameMatch = headers.match(/name="([^"]+)"/)
+          if (!nameMatch) continue
+          const name = nameMatch[1]
+
+          if (headers.includes('filename=')) {
+            // Binary file — extract as Buffer
+            const start = headerEnd + 4
+            const end = part.endsWith('\r\n') ? part.length - 2 : part.length
+            const binarySlice = part.slice(start, end)
+            fileBuffer = Buffer.from(binarySlice, 'binary')
+          } else {
+            fields[name] = value
+          }
+        }
+        resolve({ fields, fileBuffer })
+      } catch (e) {
+        reject(e)
+      }
+    })
+  })
+}
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
@@ -31,27 +81,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const payload = verifyAccessToken(token)
     if (!payload) return res.status(401).json({ success: false, error: 'Token inválido' })
 
-    // Parse multipart form
-    const form = new IncomingForm({ maxFileSize: 10 * 1024 * 1024 }) // 10MB max
-    const { fields, files } = await new Promise<{ fields: any; files: any }>((resolve, reject) => {
-      form.parse(req, (err, fields, files) => {
-        if (err) reject(err)
-        else resolve({ fields, files })
-      })
-    })
+    // Parse multipart in-memory (no disk writes — Vercel compatible)
+    const { fields, fileBuffer } = await parseMultipartInMemory(req)
 
-    const clienteId = Array.isArray(fields.clienteId) ? fields.clienteId[0] : fields.clienteId
+    const clienteId = fields.clienteId
     if (!clienteId || typeof clienteId !== 'string') {
       return res.status(400).json({ success: false, error: 'Se requiere clienteId en el form data' })
     }
 
-    const uploadedFile = Array.isArray(files.file) ? files.file[0] : files.file
-    if (!uploadedFile) {
+    if (!fileBuffer || fileBuffer.length === 0) {
       return res.status(400).json({ success: false, error: 'No se proporcionó ningún archivo Excel' })
     }
 
-    // Read and parse the Excel file
-    const fileBuffer = fs.readFileSync(uploadedFile.filepath)
+    // Parse the Excel file directly from the in-memory buffer
     const workbook = XLSX.read(fileBuffer, { type: 'buffer', cellDates: true })
 
     const sheetName = workbook.SheetNames[0]
@@ -181,9 +223,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         results.errors.push(`Fila ${rowNum}: Error al crear contenido - ${(createErr as Error).message}`)
       }
     }
-
-    // Cleanup temp file
-    try { fs.unlinkSync(uploadedFile.filepath) } catch {}
 
     return res.status(200).json({
       success: true,
