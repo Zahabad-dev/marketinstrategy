@@ -135,6 +135,25 @@ export default function PortalPage() {
               ))}
             </div>
 
+            {/* Status legend — mobile only */}
+            <div className="flex sm:hidden flex-wrap gap-x-4 gap-y-1.5 px-1">
+              {Object.entries(STATUS_LABELS).map(([key, label]) => {
+                const dotColors: Record<string, string> = {
+                  PENDIENTE: 'bg-gray-400',
+                  EN_REVISION: 'bg-yellow-400',
+                  APROBADO: 'bg-green-500',
+                  PUBLICADO: 'bg-blue-500',
+                  RECHAZADO: 'bg-red-500',
+                }
+                return (
+                  <span key={key} className="flex items-center gap-1.5">
+                    <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${dotColors[key]}`} />
+                    <span className="text-xs text-gray-600">{label}</span>
+                  </span>
+                )
+              })}
+            </div>
+
             {/* Calendar card */}
             <div className="card p-0 overflow-hidden">
               {/* Month header */}
