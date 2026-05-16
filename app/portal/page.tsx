@@ -14,6 +14,13 @@ const STATUS_COLORS: Record<string, string> = {
   PUBLICADO: 'bg-blue-100 text-blue-800',
   RECHAZADO: 'bg-red-100 text-red-800',
 }
+const STATUS_PILL_COLORS: Record<string, string> = {
+  PENDIENTE: 'bg-gray-400',
+  EN_REVISION: 'bg-yellow-400',
+  APROBADO: 'bg-green-500',
+  PUBLICADO: 'bg-blue-500',
+  RECHAZADO: 'bg-red-500',
+}
 const STATUS_LABELS: Record<string, string> = {
   PENDIENTE: 'Pendiente', EN_REVISION: 'En Revisión', APROBADO: 'Aprobado',
   PUBLICADO: 'Publicado', RECHAZADO: 'Rechazado',
@@ -135,23 +142,14 @@ export default function PortalPage() {
               ))}
             </div>
 
-            {/* Status legend — mobile only */}
-            <div className="flex sm:hidden flex-wrap gap-x-4 gap-y-1.5 px-1">
-              {Object.entries(STATUS_LABELS).map(([key, label]) => {
-                const dotColors: Record<string, string> = {
-                  PENDIENTE: 'bg-gray-400',
-                  EN_REVISION: 'bg-yellow-400',
-                  APROBADO: 'bg-green-500',
-                  PUBLICADO: 'bg-blue-500',
-                  RECHAZADO: 'bg-red-500',
-                }
-                return (
-                  <span key={key} className="flex items-center gap-1.5">
-                    <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${dotColors[key]}`} />
-                    <span className="text-xs text-gray-600">{label}</span>
-                  </span>
-                )
-              })}
+            {/* Status legend */}
+            <div className="flex flex-wrap gap-x-4 gap-y-1.5 px-1">
+              {Object.entries(STATUS_LABELS).map(([key, label]) => (
+                <span key={key} className="flex items-center gap-1.5">
+                  <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${STATUS_PILL_COLORS[key]}`} />
+                  <span className="text-xs text-gray-600">{label}</span>
+                </span>
+              ))}
             </div>
 
             {/* Calendar card */}
@@ -194,9 +192,9 @@ export default function PortalPage() {
                           </div>
                           <div className="space-y-0.5">
                             {dayContents.slice(0, 3).map((c: any) => {
-                              const color = campaignColorMap[c.campana_id || c.campanaId || c._campanaId] || 'bg-gray-400'
+                              const color = STATUS_PILL_COLORS[c.estado] || 'bg-gray-400'
                               return (
-                                <div key={c.id} className={`rounded px-1.5 py-0.5 text-white text-[11px] font-medium truncate leading-tight ${color}`}>
+                                <div key={c.id} className={`rounded px-1 py-0.5 text-white text-[10px] font-medium truncate leading-tight ${color}`}>
                                   {c.titulo}
                                 </div>
                               )
