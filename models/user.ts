@@ -62,6 +62,10 @@ export class UserModel {
       updates.push('nombre = ?')
       values.push(data.nombre)
     }
+    if (data.password !== undefined) {
+      updates.push('password = ?')
+      values.push(await hashPassword(data.password))
+    }
     if (data.rol !== undefined) {
       updates.push('rol = ?')
       values.push(data.rol)

@@ -17,7 +17,7 @@ export interface User {
 }
 
 export type UserCreateInput = Omit<User, 'id' | 'createdAt' | 'updatedAt'>
-export type UserUpdateInput = Partial<Omit<User, 'id' | 'createdAt' | 'email' | 'password'>>
+export type UserUpdateInput = Partial<Omit<User, 'id' | 'createdAt' | 'email'>>
 export type UserPublic = Omit<User, 'password'>
 
 // Client Interface

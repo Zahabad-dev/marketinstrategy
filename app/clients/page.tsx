@@ -23,6 +23,7 @@ export default function ClientsPage() {
   const [form, setForm] = useState<any>(EMPTY_FORM)
   const [editId, setEditId] = useState<string | null>(null)
   const [editHasAccount, setEditHasAccount] = useState(false)
+  const [editUsuarioId, setEditUsuarioId] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [successInfo, setSuccessInfo] = useState<{ empresa: string; email: string; password: string } | null>(null)
@@ -44,8 +45,8 @@ export default function ClientsPage() {
 
   const openCreate = () => { setForm(EMPTY_FORM); setEditId(null); setError(''); setModal('create') }
   const openEdit = (c: any) => {
-    setForm({ nombre_empresa: c.nombre_empresa, contacto: c.contacto || '', userEmail: '', userPassword: '', userNombre: '', createAccount: false })
-    setEditId(c.id); setEditHasAccount(!!c.usuario_id); setError(''); setModal('edit')
+    setForm({ nombre_empresa: c.nombre_empresa, contacto: c.contacto || '', userEmail: '', userPassword: '', userNombre: c.usuario_nombre || '', createAccount: false })
+    setEditId(c.id); setEditHasAccount(!!c.usuario_id); setEditUsuarioId(c.usuario_id || null); setError(''); setModal('edit')
   }
   const closeModal = () => { setModal(null); setError('') }
 
@@ -56,13 +57,31 @@ export default function ClientsPage() {
       if (!form.userPassword || form.userPassword.length < 6) { setError('La contrasena debe tener al menos 6 caracteres'); return }
       if (!form.userNombre.trim()) { setError('El nombre del usuario es requerido'); return }
     }
+    if (modal === 'edit' && editHasAccount && form.userPassword && form.userPassword.length < 6) {
+      setError('La contrasena debe tener al menos 6 caracteres'); return
+    }
     setSaving(true); setError('')
     try {
       const token = getToken()
       const isEdit = modal === 'edit'
       let usuarioId: string | null = null
 
-      // Step 1: create user account if requested
+      // Step 1a: update existing user credentials if editing a client with account
+      if (isEdit && editHasAccount && editUsuarioId && isAdmin()) {
+        const userUpdates: any = {}
+        if (form.userNombre.trim()) userUpdates.nombre = form.userNombre.trim()
+        if (form.userPassword && form.userPassword.length >= 6) userUpdates.password = form.userPassword
+        if (Object.keys(userUpdates).length > 0) {
+          const userRes = await fetch(`/api/users/${editUsuarioId}`, {
+            method: 'PUT',
+            headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify(userUpdates),
+          })
+          if (!userRes.ok) { const d = await userRes.json(); setError(d.error || 'Error al actualizar usuario'); setSaving(false); return }
+        }
+      }
+
+      // Step 1b: create user account if requested
       if (form.createAccount && isAdmin()) {
         const userRes = await fetch('/api/users', {
           method: 'POST',
@@ -273,6 +292,31 @@ export default function ClientsPage() {
                   </div>
                 </div>
               </div>
+
+              {isAdmin() && modal === 'edit' && editHasAccount && (
+                <div className="border-t pt-4">
+                  <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                    <KeyRound className="w-4 h-4" /> Acceso al Portal
+                  </h3>
+                  <div className="space-y-3 bg-blue-50 rounded-lg p-4 border border-blue-100">
+                    <p className="text-xs text-blue-700">Edita las credenciales de acceso del cliente al portal.</p>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Nombre de usuario</label>
+                      <input type="text" value={form.userNombre}
+                        onChange={(e) => setForm((f: any) => ({ ...f, userNombre: e.target.value }))}
+                        className="input" placeholder="Ej: Juan Perez" />
+                      <p className="text-xs text-gray-500 mt-1">No requiere @</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Nueva contrasena <span className="text-gray-400 font-normal">(opcional)</span></label>
+                      <input type="text" value={form.userPassword}
+                        onChange={(e) => setForm((f: any) => ({ ...f, userPassword: e.target.value }))}
+                        className="input font-mono" placeholder="Dejar vacio para no cambiar" />
+                      <p className="text-xs text-gray-500 mt-1">Minimo 6 caracteres si deseas cambiarla.</p>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {isAdmin() && (modal === 'create' || (modal === 'edit' && !editHasAccount)) && (
                 <div className="border-t pt-4">

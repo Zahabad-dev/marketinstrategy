@@ -18,6 +18,7 @@ export const loginSchema = z.object({
 
 export const updateUserSchema = z.object({
   nombre: z.string().min(1).optional(),
+  password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres').optional(),
   rol: z.nativeEnum(UserRole).optional(),
 })
 

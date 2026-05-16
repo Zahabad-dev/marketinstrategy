@@ -89,7 +89,7 @@ export class ClientModel {
     filters?: { usuarioId?: string; search?: string }, 
     pagination?: { page: number; perPage: number }
   ): Promise<Client[]> {
-    let query = 'SELECT clients.*, users.email as usuario_email FROM clients LEFT JOIN users ON clients.usuario_id = users.id WHERE 1=1'
+    let query = 'SELECT clients.*, users.email as usuario_email, users.nombre as usuario_nombre FROM clients LEFT JOIN users ON clients.usuario_id = users.id WHERE 1=1'
     const values: any[] = []
 
     if (filters?.usuarioId) {
